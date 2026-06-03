@@ -576,19 +576,44 @@ function showSection(id) {
 }
 
 // ==================== CHARTS ====================
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
 function parsePeriod(val) {
   if (!val) return null;
-  if (typeof val === 'string' && val.match(/^\d{4}-\d{2}/)) {
-    const d = new Date(val);
+  const s = String(val).trim();
+
+  // Format: "Jan-26" atau "Jan-2026"
+  const mmmYY = s.match(/^([A-Za-z]{3})[- ](\d{2,4})$/);
+  if (mmmYY) {
+    const mIdx = MONTHS.findIndex(m => m.toLowerCase() === mmmYY[1].toLowerCase());
+    if (mIdx >= 0) {
+      const yr = mmmYY[2].length === 2 ? 2000 + parseInt(mmmYY[2]) : parseInt(mmmYY[2]);
+      return new Date(yr, mIdx, 1);
+    }
+  }
+
+  // Format: "2026-01" atau "2026-01-15"
+  if (s.match(/^\d{4}-\d{2}/)) {
+    const d = new Date(s);
     return isNaN(d) ? null : d;
   }
-  const d = new Date(val);
+
+  // Fallback
+  const d = new Date(s);
   return isNaN(d) ? null : d;
 }
 
 function fmtPeriod(d) {
-  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  return `${months[d.getMonth()]}-${String(d.getFullYear()).slice(2)}`;
+  return `${MONTHS[d.getMonth()]}-${String(d.getFullYear()).slice(2)}`;
+}
+
+// Sort period keys secara kronologis
+function sortPeriods(periods) {
+  return periods.sort((a, b) => {
+    const da = parsePeriod(a), db = parsePeriod(b);
+    if (!da || !db) return 0;
+    return da - db;
+  });
 }
 
 function buildCharts() {
@@ -602,7 +627,7 @@ function buildCharts() {
     ncByPeriod[k].total++;
     if ((r.Status||'').toLowerCase() === 'closed') ncByPeriod[k].closed++;
   });
-  const ncPeriods = Object.keys(ncByPeriod).sort();
+  const ncPeriods = sortPeriods(Object.keys(ncByPeriod));
   
   if (chartNC) chartNC.destroy();
   const ctx1 = document.getElementById('chartNC').getContext('2d');
@@ -633,7 +658,7 @@ function buildCharts() {
     planByPeriod[k].plan += (r.Plan || 1);
     if ((r.StatusAudit||'').toLowerCase() === 'done') planByPeriod[k].done++;
   });
-  const planPeriods = Object.keys(planByPeriod).sort();
+  const planPeriods = sortPeriods(Object.keys(planByPeriod));
 
   if (chartPlan) chartPlan.destroy();
   const ctx2 = document.getElementById('chartPlan').getContext('2d');
