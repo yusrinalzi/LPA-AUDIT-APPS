@@ -164,6 +164,20 @@
   .filter-bar { background: white; border-radius: 12px; padding: 14px 18px; box-shadow: var(--shadow); margin-bottom: 20px; display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
   .filter-bar label { font-size: 12px; font-weight: 600; color: var(--text-light); }
   .filter-bar select, .filter-bar input { padding: 7px 12px; border: 1.5px solid var(--border); border-radius: 7px; font-size: 13px; outline: none; }
+  .layer-btn { padding: 7px 16px; border-radius: 20px; border: 2px solid var(--primary); background: white; color: var(--primary); font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+  .layer-btn:hover { background: var(--bg2); }
+  .layer-btn.active { background: var(--primary); color: white; }
+  .kpi-card { background: white; border-radius: 14px; padding: 16px 18px; box-shadow: var(--shadow); border-top: 4px solid var(--primary); }
+  .kpi-card .kpi-val { font-size: 28px; font-weight: 700; color: var(--primary); }
+  .kpi-card .kpi-lbl { font-size: 11px; color: var(--text-light); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .kpi-card .kpi-sub { font-size: 12px; color: var(--text-light); margin-top: 2px; }
+  .detail-table { width:100%;border-collapse:collapse;font-size:13px;background:white;border-radius:12px;overflow:hidden;box-shadow:var(--shadow); }
+  .detail-table th { background:var(--primary);color:white;padding:10px 14px;text-align:left;font-weight:600; }
+  .detail-table td { padding:10px 14px;border-bottom:1px solid var(--bg2); }
+  .detail-table tr:hover td { background:var(--bg); }
+  .detail-table input[type=date],.detail-table select,.detail-table input[type=number] { border:1px solid var(--border);border-radius:4px;padding:4px 6px;font-size:12px; }
+  @media(max-width:900px){#kpiCards{grid-template-columns:repeat(3,1fr);}}
+  @media(max-width:560px){#kpiCards{grid-template-columns:repeat(2,1fr);}}
   .toast { position: fixed; bottom: 28px; right: 28px; padding: 14px 22px; border-radius: 10px; color: white; font-size: 14px; font-weight: 600; z-index: 9999; display: none; animation: slideUp 0.3s; }
   .toast.success { background: var(--success); }
   .toast.error { background: var(--danger); }
@@ -236,6 +250,7 @@
 
   <!-- DASHBOARD -->
   <div id="sectionDashboard" class="page-content" style="display:block;">
+    <!-- Header bar -->
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
       <div class="page-title" style="margin-bottom:0;">&#128202; Dashboard Overview</div>
       <div style="display:flex;align-items:center;gap:10px;">
@@ -244,6 +259,23 @@
       </div>
     </div>
     <div id="loadingBar" style="display:none;height:4px;background:linear-gradient(90deg,var(--primary),var(--accent));border-radius:2px;margin-bottom:16px;animation:pulse 1s infinite;"></div>
+
+    <!-- Layer Filter -->
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap;">
+      <span style="font-size:13px;font-weight:600;color:var(--primary);">&#127775; Filter by Layer:</span>
+      <div id="layerBtns" style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="layer-btn active" data-layer="All" onclick="setLayerFilter('All')">Overall</button>
+        <button class="layer-btn" data-layer="Layer 1" onclick="setLayerFilter('Layer 1')">Layer 1</button>
+        <button class="layer-btn" data-layer="Layer 2" onclick="setLayerFilter('Layer 2')">Layer 2</button>
+        <button class="layer-btn" data-layer="Layer 3" onclick="setLayerFilter('Layer 3')">Layer 3</button>
+        <button class="layer-btn" data-layer="Layer 4" onclick="setLayerFilter('Layer 4')">Layer 4</button>
+      </div>
+    </div>
+
+    <!-- KPI Cards -->
+    <div id="kpiCards" style="display:grid;grid-template-columns:repeat(6,1fr);gap:14px;margin-bottom:24px;"></div>
+
+    <!-- Charts -->
     <div class="charts-grid">
       <div class="chart-card">
         <h3>&#128308; NC Total vs Closed by Period</h3>
@@ -253,6 +285,15 @@
         <h3>&#128197; Audit Plan vs Actual (Done) by Period</h3>
         <div class="chart-wrap"><canvas id="chartPlan"></canvas></div>
       </div>
+    </div>
+
+    <!-- Detail list bawah chart (klik bar) -->
+    <div id="detailPanel" style="display:none;margin-top:20px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <div id="detailTitle" style="font-size:16px;font-weight:700;color:var(--primary);"></div>
+        <button onclick="document.getElementById('detailPanel').style.display='none'" style="background:none;border:1px solid var(--border);border-radius:6px;padding:5px 12px;font-size:12px;cursor:pointer;">✕ Tutup</button>
+      </div>
+      <div id="detailContent"></div>
     </div>
   </div>
 
@@ -324,27 +365,7 @@
   </div>
 </div>
 
-<!-- MODALS -->
-<div class="modal-overlay" id="modalNCDetail">
-  <div class="modal">
-    <div class="modal-header">
-      <h3 id="modalNCTitle">NC Detail</h3>
-      <button class="modal-close" onclick="closeModal('modalNCDetail')">&times;</button>
-    </div>
-    <div class="modal-body" id="modalNCBody"></div>
-  </div>
-</div>
-<div class="modal-overlay" id="modalPlanDetail">
-  <div class="modal">
-    <div class="modal-header">
-      <h3 id="modalPlanTitle">Audit Plan Detail</h3>
-      <button class="modal-close" onclick="closeModal('modalPlanDetail')">&times;</button>
-    </div>
-    <div class="modal-body" id="modalPlanBody"></div>
-    <div class="modal-footer">
-      <button class="btn-sm btn-primary" onclick="savePlanEdits()">&#128190; Save Changes to Google Sheets</button>
-    </div>
-  </div>
+<!-- Detail panels moved inline below charts -->
 </div>
 
 <!-- Modal: Setup Apps Script URL -->
@@ -616,10 +637,60 @@ function sortPeriods(periods) {
   });
 }
 
+let activeLayer = 'All';
+
+function setLayerFilter(layer) {
+  activeLayer = layer;
+  document.querySelectorAll('.layer-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.layer === layer);
+  });
+  document.getElementById('detailPanel').style.display = 'none';
+  buildCharts();
+}
+
+function getFilteredNC() {
+  return activeLayer === 'All' ? DB.summaryNC : DB.summaryNC.filter(r => r.Layer === activeLayer);
+}
+function getFilteredPlan() {
+  return activeLayer === 'All' ? DB.auditPlan : DB.auditPlan.filter(r => r.Layer === activeLayer);
+}
+
+function buildKPICards() {
+  const nc = getFilteredNC();
+  const plan = getFilteredPlan();
+
+  const totalNC = nc.length;
+  const closedNC = nc.filter(r => (r.Status||'').toLowerCase() === 'closed').length;
+  const pctNC = totalNC > 0 ? Math.round((closedNC/totalNC)*100) : 0;
+  const totalPlan = plan.length;
+  const donePlan = plan.filter(r => (r.StatusAudit||'').toLowerCase() === 'done').length;
+  const pctDone = totalPlan > 0 ? Math.round((donePlan/totalPlan)*100) : 0;
+
+  const kpis = [
+    { val: totalNC, lbl: 'Total NC', sub: activeLayer === 'All' ? 'All Layers' : activeLayer, color: '#c0392b', bg: '#fdf1f0' },
+    { val: closedNC, lbl: 'NC Closed', sub: `dari ${totalNC} NC`, color: '#27ae60', bg: '#f1fdf5' },
+    { val: pctNC + '%', lbl: '% NC Closed', sub: pctNC >= 80 ? '✅ Good' : pctNC >= 50 ? '⚠️ Fair' : '🔴 Needs attention', color: pctNC >= 80 ? '#27ae60' : pctNC >= 50 ? '#f39c12' : '#c0392b', bg: '#f9f9f9' },
+    { val: totalPlan, lbl: 'Total Audit Plan', sub: activeLayer === 'All' ? 'All Layers' : activeLayer, color: '#02453c', bg: '#f0f5f4' },
+    { val: donePlan, lbl: 'Audit Done', sub: `dari ${totalPlan} plan`, color: '#04a086', bg: '#f0faf8' },
+    { val: pctDone + '%', lbl: '% Audit Done', sub: pctDone >= 80 ? '✅ On Track' : pctDone >= 50 ? '⚠️ Fair' : '🔴 Behind', color: pctDone >= 80 ? '#27ae60' : pctDone >= 50 ? '#f39c12' : '#c0392b', bg: '#f9f9f9' },
+  ];
+
+  document.getElementById('kpiCards').innerHTML = kpis.map(k => `
+    <div class="kpi-card" style="border-top-color:${k.color};background:${k.bg};">
+      <div class="kpi-val" style="color:${k.color};">${k.val}</div>
+      <div class="kpi-lbl">${k.lbl}</div>
+      <div class="kpi-sub">${k.sub}</div>
+    </div>`).join('');
+}
+
 function buildCharts() {
+  buildKPICards();
+  const ncData = getFilteredNC();
+  const planData = getFilteredPlan();
+
   // Chart 1: NC Total vs Closed by period
   const ncByPeriod = {};
-  DB.summaryNC.forEach(r => {
+  ncData.forEach(r => {
     const d = parsePeriod(r.Period);
     if (!d) return;
     const k = fmtPeriod(d);
@@ -628,7 +699,7 @@ function buildCharts() {
     if ((r.Status||'').toLowerCase() === 'closed') ncByPeriod[k].closed++;
   });
   const ncPeriods = sortPeriods(Object.keys(ncByPeriod));
-  
+
   if (chartNC) chartNC.destroy();
   const ctx1 = document.getElementById('chartNC').getContext('2d');
   chartNC = new Chart(ctx1, {
@@ -636,21 +707,21 @@ function buildCharts() {
     data: {
       labels: ncPeriods,
       datasets: [
-        { label: 'Total NC', data: ncPeriods.map(p => ncByPeriod[p].total), backgroundColor: 'rgba(192,57,43,0.7)', borderColor: '#c0392b', borderWidth: 1 },
-        { label: 'Closed', data: ncPeriods.map(p => ncByPeriod[p].closed), backgroundColor: 'rgba(39,174,96,0.7)', borderColor: '#27ae60', borderWidth: 1 }
+        { label: 'Total NC', data: ncPeriods.map(p => ncByPeriod[p].total), backgroundColor: 'rgba(192,57,43,0.75)', borderColor: '#c0392b', borderWidth: 1 },
+        { label: 'Closed', data: ncPeriods.map(p => ncByPeriod[p].closed), backgroundColor: 'rgba(39,174,96,0.75)', borderColor: '#27ae60', borderWidth: 1 }
       ]
     },
     options: {
       responsive: true, maintainAspectRatio: false,
-      onClick: (e, els) => { if (els.length > 0) { const idx = els[0].index; openNCDetail(ncPeriods[idx]); } },
-      plugins: { legend: { position: 'bottom' }, tooltip: { callbacks: { footer: () => 'Click to see details' } } },
+      onClick: (e, els) => { if (els.length > 0) showNCDetail(ncPeriods[els[0].index], ncData); },
+      plugins: { legend: { position: 'bottom' }, tooltip: { callbacks: { footer: () => 'Klik untuk lihat detail' } } },
       scales: { y: { beginAtZero: true } }
     }
   });
 
   // Chart 2: Plan vs Actual Done by period
   const planByPeriod = {};
-  DB.auditPlan.forEach(r => {
+  planData.forEach(r => {
     const d = parsePeriod(r.Period);
     if (!d) return;
     const k = fmtPeriod(d);
@@ -667,45 +738,103 @@ function buildCharts() {
     data: {
       labels: planPeriods,
       datasets: [
-        { label: 'Planned', data: planPeriods.map(p => planByPeriod[p].plan), backgroundColor: 'rgba(2,69,60,0.6)', borderColor: '#02453c', borderWidth: 1 },
-        { label: 'Actual Done', data: planPeriods.map(p => planByPeriod[p].done), backgroundColor: 'rgba(4,160,134,0.7)', borderColor: '#04a086', borderWidth: 1 }
+        { label: 'Planned', data: planPeriods.map(p => planByPeriod[p].plan), backgroundColor: 'rgba(2,69,60,0.65)', borderColor: '#02453c', borderWidth: 1 },
+        { label: 'Actual Done', data: planPeriods.map(p => planByPeriod[p].done), backgroundColor: 'rgba(4,160,134,0.75)', borderColor: '#04a086', borderWidth: 1 }
       ]
     },
     options: {
       responsive: true, maintainAspectRatio: false,
-      onClick: (e, els) => { if (els.length > 0) { const idx = els[0].index; openPlanDetail(planPeriods[idx]); } },
-      plugins: { legend: { position: 'bottom' }, tooltip: { callbacks: { footer: () => 'Click to see details' } } },
+      onClick: (e, els) => { if (els.length > 0) showPlanDetail(planPeriods[els[0].index], planData); },
+      plugins: { legend: { position: 'bottom' }, tooltip: { callbacks: { footer: () => 'Klik untuk lihat detail' } } },
       scales: { y: { beginAtZero: true } }
     }
   });
 }
 
-// ==================== MODALS ====================
-function openNCDetail(period) {
-  const rows = DB.summaryNC.filter(r => {
+// ==================== DETAIL PANELS (bawah chart, bukan popup) ====================
+function showNCDetail(period, ncData) {
+  const rows = (ncData || DB.summaryNC).filter(r => {
     const d = parsePeriod(r.Period);
     return d && fmtPeriod(d) === period;
   });
-  document.getElementById('modalNCTitle').textContent = `NC Detail — Period: ${period} (${rows.length} items)`;
-  let html = `<table class="data-table"><thead><tr><th>#</th><th>Line</th><th>Layer</th><th>Clause</th><th>Finding</th><th>Mode</th><th>Severity</th><th>Auditor</th><th>Status</th></tr></thead><tbody>`;
+  document.getElementById('detailTitle').textContent = `📋 NC Detail — ${period} (${rows.length} item) ${activeLayer !== 'All' ? '| ' + activeLayer : ''}`;
+  let html = `<div style="overflow-x:auto;"><table class="detail-table"><thead><tr><th>ID</th><th>Line</th><th>Layer</th><th>Clause</th><th>Finding Description</th><th>Mode</th><th>Severity</th><th>Auditor</th><th>Resp. Person</th><th>Status</th></tr></thead><tbody>`;
   rows.forEach(r => {
     const status = r.Status || '';
-    html += `<tr><td>${r.No||''}</td><td>${r.Line||''}</td><td>${r.Layer||''}</td><td>${r.Clause||''}</td><td>${(r.FindingDesc||'').substring(0,60)}</td><td>${r.FindingMode||''}</td><td><span class="badge badge-${(r.Severity||'').toLowerCase()}">${r.Severity||''}</span></td><td>${r.Auditor||''}</td><td><span class="badge badge-${status.toLowerCase()}">${status}</span></td></tr>`;
+    html += `<tr>
+      <td>${r.No||''}</td><td>${r.Line||''}</td><td>${r.Layer||''}</td><td>${r.Clause||''}</td>
+      <td style="max-width:200px;color:var(--danger-light);font-style:italic;">${(r.FindingDesc||'').substring(0,80)}${(r.FindingDesc||'').length>80?'...':''}</td>
+      <td>${r.FindingMode||''}</td>
+      <td><span class="badge badge-${(r.Severity||'').toLowerCase()}">${r.Severity||''}</span></td>
+      <td>${r.Auditor||''}</td><td>${r.ResPerson||''}</td>
+      <td><span class="badge badge-${status.toLowerCase()}">${status}</span></td>
+    </tr>`;
   });
-  html += '</tbody></table>';
-  document.getElementById('modalNCBody').innerHTML = html;
-  document.getElementById('modalNCDetail').classList.add('active');
+  html += '</tbody></table></div>';
+  document.getElementById('detailContent').innerHTML = html;
+  const panel = document.getElementById('detailPanel');
+  panel.style.display = 'block';
+  panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 let editingPlanRows = [];
-function openPlanDetail(period) {
-  editingPlanRows = DB.auditPlan.filter(r => {
+function showPlanDetail(period, planData) {
+  editingPlanRows = (planData || DB.auditPlan).filter(r => {
     const d = parsePeriod(r.Period);
     return d && fmtPeriod(d) === period;
   });
-  document.getElementById('modalPlanTitle').textContent = `Audit Plan vs Actual — Period: ${period}`;
-  renderPlanModal();
-  document.getElementById('modalPlanDetail').classList.add('active');
+  document.getElementById('detailTitle').textContent = `📅 Audit Plan vs Actual — ${period} (${editingPlanRows.length} item) ${activeLayer !== 'All' ? '| ' + activeLayer : ''}`;
+  renderPlanDetail();
+  const panel = document.getElementById('detailPanel');
+  panel.style.display = 'block';
+  panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function renderPlanDetail() {
+  let html = `<div style="overflow-x:auto;"><table class="detail-table"><thead><tr><th>Auditor</th><th>Line</th><th>Layer</th><th>Plan Date</th><th>Actual Date</th><th>Total NC</th><th>Status</th><th>Simpan</th></tr></thead><tbody>`;
+  editingPlanRows.forEach((r, i) => {
+    const status = r.StatusAudit || 'Open';
+    html += `<tr>
+      <td>${r.Auditor||''}</td>
+      <td>${r.Line||''}</td>
+      <td>${r.Layer||''}</td>
+      <td>${fmtDate(r.PlanAudit)}</td>
+      <td><input type="date" id="pd_actual_${i}" value="${toDateInput(r.ActualAudit)}"></td>
+      <td><input type="number" id="pd_ncs_${i}" value="${r.TotalNCs||0}" min="0" style="width:60px;"></td>
+      <td><select id="pd_status_${i}">
+        <option ${status==='Open'?'selected':''}>Open</option>
+        <option ${status==='Done'?'selected':''}>Done</option>
+      </select></td>
+      <td>
+        <button class="btn-sm btn-primary" onclick="savePlanDetailRow(${i})">&#128190;</button>
+        <div class="upload-status" id="pd_st_${i}" style="font-size:11px;"></div>
+      </td>
+    </tr>`;
+  });
+  html += '</tbody></table></div>';
+  document.getElementById('detailContent').innerHTML = html;
+}
+
+function savePlanDetailRow(i) {
+  const r = editingPlanRows[i];
+  r.ActualAudit = document.getElementById(`pd_actual_${i}`).value;
+  r.TotalNCs = document.getElementById(`pd_ncs_${i}`).value;
+  r.StatusAudit = document.getElementById(`pd_status_${i}`).value;
+  const el = document.getElementById(`pd_st_${i}`);
+  if (APPS_SCRIPT_URL) {
+    el.textContent = '⏳...';
+    postToScript('updatePlanRow', {
+      'PlanAudit': r.PlanAudit, 'Line': r.Line, 'Auditor': r.Auditor,
+      'ActualAudit': r.ActualAudit, 'TotalNCs': r.TotalNCs, 'StatusAudit': r.StatusAudit
+    }).then(res => {
+      el.className = 'upload-status ' + (res.status==='ok'?'ok':'err');
+      el.textContent = res.status==='ok' ? '✅ Saved' : '❌ Gagal';
+      buildCharts();
+    });
+  } else {
+    el.className = 'upload-status ok'; el.textContent = '✓ Lokal';
+    buildCharts();
+  }
 }
 
 function renderPlanModal() {
@@ -758,10 +887,7 @@ function saveSinglePlanRow(i) {
   showToast('Row saved. Note: Google Sheets write requires Apps Script backend.', 'success');
 }
 
-function savePlanEdits() {
-  editingPlanRows.forEach((_, i) => saveSinglePlanRow(i));
-  buildCharts();
-}
+
 
 function closeModal(id) { document.getElementById(id).classList.remove('active'); }
 
