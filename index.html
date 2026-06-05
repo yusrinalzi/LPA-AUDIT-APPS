@@ -287,6 +287,56 @@
       </div>
     </div>
 
+    <!-- Pareto Analysis Section -->
+    <div style="margin-bottom:24px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+        <div style="font-size:15px;font-weight:700;color:var(--primary);display:flex;align-items:center;gap:8px;">
+          &#128202; NC Pareto Analysis
+          <span style="font-size:11px;font-weight:400;color:var(--text-light);background:var(--bg2);padding:2px 8px;border-radius:10px;">Klik chart untuk detail</span>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <!-- Mini Pareto 1: Per Category -->
+        <div class="chart-card pareto-mini" onclick="openPareto(1)" style="cursor:pointer;transition:box-shadow 0.2s;" onmouseover="this.style.boxShadow='0 4px 20px rgba(2,69,60,0.2)'" onmouseout="this.style.boxShadow=''">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+            <h3 style="font-size:13px;margin:0;">&#128200; Chart 1. Per NC Category</h3>
+            <span style="font-size:11px;color:var(--accent);font-weight:600;">🔍 Klik untuk perbesar</span>
+          </div>
+          <div style="height:160px;"><canvas id="miniPareto1"></canvas></div>
+          <div id="paretoSummary1" style="margin-top:10px;font-size:11px;color:var(--text-light);line-height:1.6;"></div>
+        </div>
+        <!-- Mini Pareto 2: Per NC Mode -->
+        <div class="chart-card pareto-mini" onclick="openPareto(2)" style="cursor:pointer;transition:box-shadow 0.2s;" onmouseover="this.style.boxShadow='0 4px 20px rgba(2,69,60,0.2)'" onmouseout="this.style.boxShadow=''">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+            <h3 style="font-size:13px;margin:0;">&#128200; Chart 2. Per NC Mode</h3>
+            <span style="font-size:11px;color:var(--accent);font-weight:600;">🔍 Klik untuk perbesar</span>
+          </div>
+          <div style="height:160px;"><canvas id="miniPareto2"></canvas></div>
+          <div id="paretoSummary2" style="margin-top:10px;font-size:11px;color:var(--text-light);line-height:1.6;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pareto Popup Overlay -->
+    <div id="paretoOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:2000;justify-content:center;align-items:center;padding:24px;">
+      <div style="background:white;border-radius:20px;width:100%;max-width:900px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+        <div style="background:var(--primary);color:white;padding:18px 24px;border-radius:20px 20px 0 0;display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <div id="paretoPopupTitle" style="font-size:16px;font-weight:700;"></div>
+            <div id="paretoPopupSubtitle" style="font-size:12px;opacity:0.8;margin-top:2px;"></div>
+          </div>
+          <button onclick="closePareto()" style="background:rgba(255,255,255,0.2);border:none;color:white;width:36px;height:36px;border-radius:50%;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;">&times;</button>
+        </div>
+        <div style="padding:24px;">
+          <div style="height:360px;margin-bottom:24px;"><canvas id="bigPareto"></canvas></div>
+          <div id="paretoInsight" style="background:var(--bg);border-radius:12px;padding:16px;font-size:13px;line-height:1.8;color:var(--text);"></div>
+          <div style="margin-top:16px;overflow-x:auto;">
+            <table class="data-table" id="paretoTable"></table>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Detail list bawah chart (klik bar) -->
     <div id="detailPanel" style="display:none;margin-top:20px;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
@@ -749,6 +799,9 @@ function buildCharts() {
       scales: { y: { beginAtZero: true } }
     }
   });
+
+  // Build pareto charts after main charts
+  setTimeout(() => buildParetoCharts(), 100);
 }
 
 // ==================== DETAIL PANELS (bawah chart, bukan popup) ====================
@@ -1291,6 +1344,181 @@ function showToast(msg, type='success') {
   t.textContent = msg; t.className = `toast ${type}`; t.style.display = 'block';
   setTimeout(() => { t.style.display = 'none'; }, 4000);
 }
+
+// ==================== PARETO ANALYSIS ====================
+const PARETO_COLORS = ['#02453c','#04a086','#1565c0','#f39c12','#8e44ad','#c0392b','#27ae60'];
+
+// Build pareto data dynamically from DB
+function buildParetoData() {
+  const nc = getFilteredNC();
+
+  // Chart 1: Per Category (Finding Mode grouped)
+  const catMap = {};
+  const modeMap = {};
+  nc.forEach(r => {
+    const cat = categorizeFinding(r.FindingMode || '');
+    catMap[cat] = (catMap[cat] || 0) + 1;
+    const mode = r.FindingMode || 'Unknown';
+    modeMap[mode] = (modeMap[mode] || 0) + 1;
+  });
+
+  const sortDesc = obj => Object.entries(obj).sort((a,b) => b[1]-a[1]);
+  const total1 = Object.values(catMap).reduce((a,b)=>a+b,0) || 1;
+  const total2 = Object.values(modeMap).reduce((a,b)=>a+b,0) || 1;
+
+  let cum1 = 0;
+  const pareto1 = sortDesc(catMap).map(([k,v]) => {
+    cum1 += v/total1*100;
+    return { label: k.length>25?k.substring(0,23)+'…':k, full: k, count: v, pct: +(v/total1*100).toFixed(1), cum: +cum1.toFixed(1) };
+  });
+
+  let cum2 = 0;
+  const pareto2 = sortDesc(modeMap).map(([k,v]) => {
+    cum2 += v/total2*100;
+    return { label: k.length>22?k.substring(0,20)+'…':k, full: k, count: v, pct: +(v/total2*100).toFixed(1), cum: +cum2.toFixed(1) };
+  });
+
+  return { pareto1, pareto2, total1, total2 };
+}
+
+function categorizeFinding(mode) {
+  if (!mode) return 'Unknown';
+  if (mode.includes('Machines') || mode.includes('Fixtures') || mode.includes('Tools') || mode.includes('Work Environment')) return 'Machines/Fixtures/Tools/WE&F';
+  if (mode.includes('Man')) return 'Man';
+  if (mode.includes('Method')) return 'Methods';
+  if (mode.includes('Material')) return 'Material';
+  if (mode.includes('Process Effectiveness') || mode.includes('Efficiency')) return 'Process Effectiveness & Efficiency';
+  if (mode.includes('Monitoring') || mode.includes('Measurement')) return 'Monitoring & Measurement';
+  return mode;
+}
+
+let miniChart1 = null, miniChart2 = null, bigChart = null;
+
+function buildParetoCharts() {
+  const { pareto1, pareto2 } = buildParetoData();
+  renderMiniPareto('miniPareto1', pareto1, miniChart1, c => miniChart1 = c);
+  renderMiniPareto('miniPareto2', pareto2, miniChart2, c => miniChart2 = c);
+  renderParetoSummary('paretoSummary1', pareto1);
+  renderParetoSummary('paretoSummary2', pareto2);
+}
+
+function renderMiniPareto(canvasId, data, existingChart, setChart) {
+  if (existingChart) existingChart.destroy();
+  const ctx = document.getElementById(canvasId).getContext('2d');
+  const c = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: data.map(d => d.label),
+      datasets: [
+        { type:'bar', label:'Count', data: data.map(d => d.count), backgroundColor: data.map((_,i)=>PARETO_COLORS[i%PARETO_COLORS.length]+'cc'), yAxisID:'y' },
+        { type:'line', label:'Cumulative %', data: data.map(d => d.cum), borderColor:'#c0392b', backgroundColor:'rgba(192,57,43,0.1)', pointRadius:3, borderWidth:2, yAxisID:'y2', tension:0.3 }
+      ]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false} },
+      scales:{
+        y:{beginAtZero:true, grid:{display:false}, ticks:{font:{size:9}}},
+        y2:{position:'right', min:0, max:100, grid:{display:false}, ticks:{font:{size:9}, callback:v=>v+'%'}},
+        x:{ticks:{font:{size:8}, maxRotation:30}}
+      }
+    }
+  });
+  setChart(c);
+}
+
+function renderParetoSummary(elId, data) {
+  const top3 = data.slice(0,3);
+  const top3cum = top3[top3.length-1]?.cum || 0;
+  const el = document.getElementById(elId);
+  el.innerHTML = `Top 3 kontributor: <strong style="color:var(--primary)">${top3.map(d=>`<span style="color:var(--danger)">${d.full}</span>`).join(', ')}</strong> dengan akumulasi <strong style="color:var(--danger)">${top3cum}%</strong>`;
+}
+
+let currentParetoIdx = 1;
+function openPareto(idx) {
+  currentParetoIdx = idx;
+  const { pareto1, pareto2, total1, total2 } = buildParetoData();
+  const data  = idx === 1 ? pareto1 : pareto2;
+  const total = idx === 1 ? total1  : total2;
+  const title = idx === 1 ? 'Chart 1. NC per Category' : 'Chart 2. NC per Mode';
+  const sub   = idx === 1 ? 'Kategori penyebab NC berdasarkan scope finding' : 'Mode NC berdasarkan jenis temuan';
+
+  document.getElementById('paretoPopupTitle').textContent = title;
+  document.getElementById('paretoPopupSubtitle').textContent = sub + '  |  Total: ' + total + ' NC  |  ' + (activeLayer==='All'?'All Layers':activeLayer);
+
+  // Big chart
+  if (bigChart) bigChart.destroy();
+  const ctx = document.getElementById('bigPareto').getContext('2d');
+  bigChart = new Chart(ctx, {
+    type:'bar',
+    data:{
+      labels: data.map(d=>d.full),
+      datasets:[
+        { type:'bar', label:'Jumlah NC', data:data.map(d=>d.count), backgroundColor:data.map((_,i)=>PARETO_COLORS[i%PARETO_COLORS.length]+'cc'), borderColor:data.map((_,i)=>PARETO_COLORS[i%PARETO_COLORS.length]), borderWidth:1.5, yAxisID:'y' },
+        { type:'line', label:'Kumulatif %', data:data.map(d=>d.cum), borderColor:'#c0392b', backgroundColor:'rgba(192,57,43,0.08)', pointRadius:5, pointBackgroundColor:'#c0392b', borderWidth:2.5, yAxisID:'y2', tension:0.3 }
+      ]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{position:'bottom'}, tooltip:{ callbacks:{ afterLabel: ctx => ctx.dataset.label==='Jumlah NC' ? `Kumulatif: ${data[ctx.dataIndex].cum}%` : '' } } },
+      scales:{
+        y:{beginAtZero:true, title:{display:true,text:'Jumlah NC'}, grid:{color:'rgba(0,0,0,0.05)'}},
+        y2:{position:'right', min:0, max:100, title:{display:true,text:'Kumulatif %'}, grid:{display:false}, ticks:{callback:v=>v+'%'}},
+        x:{ticks:{maxRotation:35, font:{size:11}}}
+      }
+    }
+  });
+
+  // Insight text
+  const top3 = data.slice(0,3);
+  const top3cum = top3[top3.length-1]?.cum||0;
+  document.getElementById('paretoInsight').innerHTML = `
+    <strong>📊 Analisis Pareto ${idx===1?'Per Kategori':'Per Mode NC'}:</strong><br>
+    Berdasarkan ${idx===1?'kategori NC':'NC Mode'}, 3 kontributor terbesar secara berurutan adalah
+    <strong style="color:var(--primary)">"${top3[0]?.full||'-'}"</strong>,
+    <strong style="color:var(--primary)">"${top3[1]?.full||'-'}"</strong> &
+    <strong style="color:var(--primary)">"${top3[2]?.full||'-'}"</strong>
+    dengan persentase akumulasi sebesar <strong style="color:var(--danger);font-size:15px;">${top3cum}%</strong>
+    (dari total ${total} NC${activeLayer!=='All'?' di '+activeLayer:''}).
+    <br><br>
+    <strong>💡 Rekomendasi:</strong> Fokuskan program improvement pada kategori di atas untuk dampak terbesar terhadap pengurangan NC.`;
+
+  // Table
+  let tableHtml = '<thead><tr><th>#</th><th>'+(idx===1?'Category':'NC Mode')+'</th><th>Count</th><th>%</th><th>Cum. %</th><th>Status</th></tr></thead><tbody>';
+  data.forEach((d,i) => {
+    const bar = Math.round(d.pct);
+    const isTop3 = i < 3;
+    tableHtml += `<tr style="${isTop3?'background:#fff8e1':'';}">
+      <td><strong>${i+1}</strong></td>
+      <td>${d.full}${isTop3?'<span style="margin-left:6px;font-size:10px;background:#f39c12;color:white;padding:1px 6px;border-radius:8px;">Top'+(i+1)+'</span>':''}</td>
+      <td><strong>${d.count}</strong></td>
+      <td>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <div style="flex:1;background:#eee;border-radius:4px;height:8px;"><div style="width:${bar}%;background:${PARETO_COLORS[i%PARETO_COLORS.length]};height:100%;border-radius:4px;"></div></div>
+          ${d.pct}%
+        </div>
+      </td>
+      <td><strong style="color:${d.cum<=80?'var(--danger)':'var(--text-light)'}">${d.cum}%</strong></td>
+      <td>${d.cum<=80?'<span class="badge badge-open">Prioritas</span>':'<span class="badge badge-done">Monitor</span>'}</td>
+    </tr>`;
+  });
+  tableHtml += '</tbody>';
+  document.getElementById('paretoTable').innerHTML = tableHtml;
+
+  // Show overlay
+  const overlay = document.getElementById('paretoOverlay');
+  overlay.style.display = 'flex';
+  setTimeout(() => overlay.style.opacity = '1', 10);
+}
+
+function closePareto() {
+  document.getElementById('paretoOverlay').style.display = 'none';
+}
+
+// Close on overlay background click
+document.getElementById('paretoOverlay').addEventListener('click', function(e) {
+  if (e.target === this) closePareto();
+});
 
 // Close modals on overlay click
 document.querySelectorAll('.modal-overlay').forEach(el => {
