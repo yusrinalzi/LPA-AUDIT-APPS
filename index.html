@@ -1096,7 +1096,7 @@ function submitAuditForm() {
 
   // Upload ke Google Sheets via Apps Script
   if (APPS_SCRIPT_URL) {
-    showToast(`⏳ Mengupload ke Google Sheets...`, 'success');
+    showToast(`⏳ Uploading data to Google Sheets...`, 'success');
     const ncPromises = ncItems.map(nc => postToScript('appendSummary', {
       'No': nc.No, 'Line': nc.Line, 'Layer': nc.Layer, 'Clause': nc.Clause, 'Period': nc.Period,
       'Finding Description': nc.FindingDesc, 'NCPicture': nc.NCPicture,
@@ -1118,7 +1118,7 @@ function submitAuditForm() {
       showToast(allOk ? 'OK: ' + ncItems.length + ' NC & data plan succesfully upload to Google Sheets!' : 'Some data fail to upload. Check console for details.', allOk ? 'success' : 'error');
     });
   } else {
-    showToast(`${ncItems.length} NC save in lokal. Please link the Apps Script to sync to Google Sheets.`, 'success');
+    showToast(`${ncItems.length} NC save in lokal only. Please link the Apps Script to sync to Google Sheets.`, 'success');
   }
   
   // Reset form
@@ -1277,7 +1277,7 @@ function saveNCFollowup(i, no) {
         buildCharts();
       });
     } else {
-      el.className = 'upload-status ok'; el.textContent = '✓ Save in lokal';
+      el.className = 'upload-status ok'; el.textContent = '✓ Save in lokal not in google sheet';
       buildCharts();
     }
   }
@@ -1287,8 +1287,8 @@ function notifyPIC(pic, auditor, issueDate, desc, line) {
   const picData = DB.auditors.find(a => a.Title === pic);
   const emailBody = `Hi, ${pic}.\n\nAn NC from Layer Process Audit has been issued by ${auditor} on ${issueDate}. The details of NC is: ${desc}, captured at ${line}.\n\nYou or your subordinate are assigned to close the NC. Please contact QA/QC team for more detail of the NC.\n\nThank you for your action(s).\n\nRegards,\nLPA Teams`;
   const to = picData ? picData.Email : '';
-  const cc = picData ? [picData.Email2, picData['N+1Email'], picData.qms1, picData.qms2].filter(Boolean).join(',') : '';
-  const subject = `[LPA NC Notification] NC from Line ${line} — Action Required`;
+  const cc = picData ? [picData.Email2, picData['N+1Email'], picData.qms1, picData.qms2].filter(Boolean).join(';') : '';
+  const subject = `[LPA NC Notification] NC from Line ${line} NC ID ${ID}— Action Required`;
   const mailto = `mailto:${to}?cc=${encodeURIComponent(cc)}&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(emailBody)}`;
   window.open(mailto);
 }
@@ -1307,9 +1307,9 @@ const PARETO_COLORS = ['#02453c','#02453c','#02453c','#02453c','#02453c','#02453
 function buildParetoData() {
   const nc = getFilteredNC();
 
-  // Chart 1: Per NC Category — from r.NCCategory (kolom "Factor" di Google Sheet)
+  // Chart 1: Per NC Category — from r.NCCategory from Google Sheet
   const catMap = {};
-  // Chart 2: Per NC Mode — from r.FindingMode (kolom "Finding Mode" di Google Sheet)
+  // Chart 2: Per NC Mode — from r.FindingMode from Google Sheet
   const modeMap = {};
 
   nc.forEach(r => {
@@ -1403,7 +1403,7 @@ function openPareto(idx) {
   const data  = idx === 1 ? pareto1 : pareto2;
   const total = idx === 1 ? total1  : total2;
   const title = idx === 1 ? 'Chart 1. NC per Category (Factor)' : 'Chart 2. NC per Mode (Finding Mode)';
-  const sub   = idx === 1 ? 'The root-cause of NC according to Factor in Google Sheet' : 'Mode NC according to coulumb Finding Mode in Google Sheet';
+  const sub   = idx === 1 ? 'The root-cause of NC according to category (Factor)' : 'Mode NC according to coulumb Finding Mode';
 
   document.getElementById('paretoPopupTitle').textContent = title;
   document.getElementById('paretoPopupSubtitle').textContent = sub + '  |  Total: ' + total + ' NC  |  ' + (activeLayer==='All'?'All Layers':activeLayer);
@@ -1442,7 +1442,7 @@ function openPareto(idx) {
     '<strong style="color:var(--primary)">"' + (top3[2]&&top3[2].full||'-') + '"</strong> ' +
     'with accumulated percentage <strong style="color:var(--danger);font-size:15px;">' + top3cum + '%</strong> ' +
     '(from total ' + total + ' NC' + (activeLayer!=='All'?' di '+activeLayer:'') + ').' +
-    '<br><br><strong>&#128161; Rekomendation:</strong> Focus improvement program on above kategory to highest NC contributor.'
+    '<br><br><strong>&#128161; Rekomendation:</strong> Focus improvement program on above kategory to highest 3 luNC contributor.'
 
   // Table
   let tableHtml = '<thead><tr><th>#</th><th>'+(idx===1?'NC Category':'NC Mode')+'</th><th>Count</th><th>%</th><th>Cum. %</th><th>Status</th></tr></thead><tbody>';
