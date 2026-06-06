@@ -279,19 +279,19 @@
     <div style="display:grid;grid-template-columns:1fr 1fr 320px;gap:20px;margin-bottom:24px;" id="mainChartsRow">
       <!-- Chart 1: NC Total vs Closed -->
       <div class="chart-card">
-        <h3>&#128308; NC Total vs Closed by Period</h3>
+        <h3>&#128308; NC Total vs Closed</h3>
         <div class="chart-wrap"><canvas id="chartNC"></canvas></div>
       </div>
       <!-- Chart 2: Audit Plan vs Actual -->
       <div class="chart-card">
-        <h3>&#128197; Audit Plan vs Actual (Done) by Period</h3>
+        <h3>&#128197; Audit Plan vs Actual (Done)</h3>
         <div class="chart-wrap"><canvas id="chartPlan"></canvas></div>
       </div>
       <!-- Pareto Panel (kanan) -->
       <div class="chart-card" style="display:flex;flex-direction:column;gap:0;padding:16px;">
         <div style="font-size:13px;font-weight:700;color:var(--primary);margin-bottom:12px;display:flex;align-items:center;gap:6px;">
           &#128202; NC Pareto Analysis
-          <span style="font-size:10px;font-weight:400;color:var(--text-light);background:var(--bg2);padding:1px 6px;border-radius:8px;">Klik untuk detail</span>
+          <span style="font-size:10px;font-weight:400;color:var(--text-light);background:var(--bg2);padding:1px 6px;border-radius:8px;">Click for detail</span>
         </div>
         <!-- Mini Pareto 1 -->
         <div class="pareto-mini" onclick="openPareto(1)" style="cursor:pointer;border:1px solid var(--border);border-radius:10px;padding:10px;margin-bottom:10px;transition:all 0.2s;" onmouseover="this.style.background='var(--bg)';this.style.borderColor='var(--accent)'" onmouseout="this.style.background='';this.style.borderColor='var(--border)'">
@@ -334,11 +334,12 @@
       </div>
     </div>
 
-    <!-- Detail list bawah chart (klik bar) -->
+    <!-- Detail list under the chart (Click bar) -->
     <div id="detailPanel" style="display:none;margin-top:20px;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
         <div id="detailTitle" style="font-size:16px;font-weight:700;color:var(--primary);"></div>
-        <button onclick="document.getElementById('detailPanel').style.display='none'" style="background:none;border:1px solid var(--border);border-radius:6px;padding:5px 12px;font-size:12px;cursor:pointer;">✕ Tutup</button>
+        <button onclick="document.getElementById('detailPanel').style.display='none'" style="background:none;border:1px solid var(--border);border-radius:6px;padding:5px 12px;font-size:12px;cursor:pointer;">✕ 
+Close</button>
       </div>
       <div id="detailContent"></div>
     </div>
@@ -442,7 +443,7 @@
     </div>
     <div class="modal-footer">
       <button class="btn-sm" onclick="closeModal('modalScriptUrl')" style="background:var(--bg2);border:1px solid var(--border);">Batal</button>
-      <button class="btn-sm btn-primary" onclick="saveScriptUrl()">&#128190; Simpan & Hubungkan</button>
+      <button class="btn-sm btn-primary" onclick="saveScriptUrl()">&#128190; Save & Linked</button>
     </div>
   </div>
 </div>
@@ -551,14 +552,14 @@ async function loadAllData() {
     if (rSum  && rSum.length  > 0) { DB.summaryNC       = rSum.map(mapSummaryRow);   loaded++; }
 
     if (loaded === 4) {
-      source = '🟢 Live dari Google Sheets (Apps Script)';
+      source = '🟢 Live from Google Sheets (Apps Script)';
     } else if (loaded > 0) {
-      source = `🟡 Sebagian dari Google Sheets (${loaded}/4 sheet). Sisanya: embedded data.`;
+      source = `🟡 Some from Google Sheets (${loaded}/4 sheet). Remaining: embedded data.`;
     } else {
-      source = '🔴 Apps Script gagal — menggunakan embedded data';
+      source = '🔴 Apps Script Fail — Use embedded data';
     }
   } else {
-    source = '🟡 Embedded data (Apps Script URL belum diset — klik ⚙️ untuk setup)';
+    source = '🟡 Embedded data (Apps Script URL not yet set — Click ⚙️ to setup)';
   }
 
   document.getElementById('loadingBar').style.display = 'none';
@@ -568,7 +569,7 @@ async function loadAllData() {
   populateFilters();
 }
 
-// ---- Simpan Apps Script URL ----
+// ---- Save Apps Script URL ----
 function saveScriptUrl() {
   const url = document.getElementById('scriptUrlInput').value.trim();
   if (!url.startsWith('https://script.google.com')) {
@@ -578,7 +579,7 @@ function saveScriptUrl() {
   APPS_SCRIPT_URL = url;
   localStorage.setItem('lpa_script_url', url);
   document.getElementById('modalScriptUrl').classList.remove('active');
-  showToast('Apps Script URL tersimpan! Memuat ulang data...', 'success');
+  showToast('Apps Script URL saved! Reload the data...', 'success');
   loadAllData().then(() => { setupAuditForm(); renderFollowup(); });
 }
 function openScriptSetup() {
@@ -715,10 +716,10 @@ function buildKPICards() {
 
   const kpis = [
     { val: totalNC, lbl: 'Total NC', sub: activeLayer === 'All' ? 'All Layers' : activeLayer, color: '#c0392b', bg: '#fdf1f0' },
-    { val: closedNC, lbl: 'NC Closed', sub: `dari ${totalNC} NC`, color: '#27ae60', bg: '#f1fdf5' },
+    { val: closedNC, lbl: 'NC Closed', sub: `from ${totalNC} NC`, color: '#27ae60', bg: '#f1fdf5' },
     { val: pctNC + '%', lbl: '% NC Closed', sub: pctNC >= 80 ? '✅ Good' : pctNC >= 50 ? '⚠️ Fair' : '🔴 Needs attention', color: pctNC >= 80 ? '#27ae60' : pctNC >= 50 ? '#f39c12' : '#c0392b', bg: '#f9f9f9' },
     { val: totalPlan, lbl: 'Total Audit Plan', sub: activeLayer === 'All' ? 'All Layers' : activeLayer, color: '#02453c', bg: '#f0f5f4' },
-    { val: donePlan, lbl: 'Audit Done', sub: `dari ${totalPlan} plan`, color: '#04a086', bg: '#f0faf8' },
+    { val: donePlan, lbl: 'Audit Done', sub: `from ${totalPlan} plan`, color: '#04a086', bg: '#f0faf8' },
     { val: pctDone + '%', lbl: '% Audit Done', sub: pctDone >= 80 ? '✅ On Track' : pctDone >= 50 ? '⚠️ Fair' : '🔴 Behind', color: pctDone >= 80 ? '#27ae60' : pctDone >= 50 ? '#f39c12' : '#c0392b', bg: '#f9f9f9' },
   ];
 
@@ -735,7 +736,7 @@ function buildCharts() {
   const ncData = getFilteredNC();
   const planData = getFilteredPlan();
 
-  // Chart 1: NC Total vs Closed by period
+  // Chart 1: NC Total vs Closed
   const ncByPeriod = {};
   ncData.forEach(r => {
     const d = parsePeriod(r.Period);
@@ -761,12 +762,12 @@ function buildCharts() {
     options: {
       responsive: true, maintainAspectRatio: false,
       onClick: (e, els) => { if (els.length > 0) showNCDetail(ncPeriods[els[0].index], ncData); },
-      plugins: { legend: { position: 'bottom' }, tooltip: { callbacks: { footer: () => 'Klik untuk lihat detail' } } },
+      plugins: { legend: { position: 'bottom' }, tooltip: { callbacks: { footer: () => 'Click to see the details' } } },
       scales: { y: { beginAtZero: true } }
     }
   });
 
-  // Chart 2: Plan vs Actual Done by period
+  // Chart 2: Plan vs Actual Done
   const planByPeriod = {};
   planData.forEach(r => {
     const d = parsePeriod(r.Period);
@@ -792,7 +793,7 @@ function buildCharts() {
     options: {
       responsive: true, maintainAspectRatio: false,
       onClick: (e, els) => { if (els.length > 0) showPlanDetail(planPeriods[els[0].index], planData); },
-      plugins: { legend: { position: 'bottom' }, tooltip: { callbacks: { footer: () => 'Klik untuk lihat detail' } } },
+      plugins: { legend: { position: 'bottom' }, tooltip: { callbacks: { footer: () => 'Click to see the details' } } },
       scales: { y: { beginAtZero: true } }
     }
   });
@@ -841,7 +842,7 @@ function showPlanDetail(period, planData) {
 }
 
 function renderPlanDetail() {
-  let html = `<div style="overflow-x:auto;"><table class="detail-table"><thead><tr><th>Auditor</th><th>Line</th><th>Layer</th><th>Plan Date</th><th>Actual Date</th><th>Total NC</th><th>Status</th><th>Simpan</th></tr></thead><tbody>`;
+  let html = `<div style="overflow-x:auto;"><table class="detail-table"><thead><tr><th>Auditor</th><th>Line</th><th>Layer</th><th>Plan Date</th><th>Actual Date</th><th>Total NC</th><th>Status</th><th>Save</th></tr></thead><tbody>`;
   editingPlanRows.forEach((r, i) => {
     const status = r.StatusAudit || 'Open';
     html += `<tr>
@@ -1157,10 +1158,10 @@ function submitAuditForm() {
     });
     Promise.all([...ncPromises, planPromise]).then(results => {
       const allOk = results.every(r => r.status === 'ok');
-      showToast(allOk ? 'OK: ' + ncItems.length + ' NC & data plan berhasil disimpan ke Google Sheets!' : 'Sebagian data gagal upload. Cek console untuk detail.', allOk ? 'success' : 'error');
+      showToast(allOk ? 'OK: ' + ncItems.length + ' NC & data plan succesfully upload to Google Sheets!' : 'Some data fail to upload. Check console for details.', allOk ? 'success' : 'error');
     });
   } else {
-    showToast(`${ncItems.length} NC tersimpan lokal. Hubungkan Apps Script untuk sync ke Google Sheets.`, 'success');
+    showToast(`${ncItems.length} NC save in lokal. Please link the Apps Script to sync to Google Sheets.`, 'success');
   }
   
   // Reset form
@@ -1312,14 +1313,14 @@ function saveNCFollowup(i, no) {
         'Status': ncRow.Status
       }).then(res => {
         if (res.status === 'ok') {
-          el.className = 'upload-status ok'; el.textContent = '✅ Tersimpan ke Google Sheets';
+          el.className = 'upload-status ok'; el.textContent = '✅ Data uploaded to Google Sheets';
         } else {
-          el.className = 'upload-status err'; el.textContent = '❌ Gagal: ' + res.message;
+          el.className = 'upload-status err'; el.textContent = '❌ Fail: ' + res.message;
         }
         buildCharts();
       });
     } else {
-      el.className = 'upload-status ok'; el.textContent = '✓ Tersimpan lokal';
+      el.className = 'upload-status ok'; el.textContent = '✓ Save in lokal';
       buildCharts();
     }
   }
@@ -1343,7 +1344,7 @@ function showToast(msg, type='success') {
 }
 
 // ==================== PARETO ANALYSIS ====================
-const PARETO_COLORS = ['#02453c','#04a086','#1565c0','#f39c12','#8e44ad','#c0392b','#27ae60'];
+const PARETO_COLORS = ['#02453c','#02453c','#02453c','#02453c','#02453c','#02453c','#02453c'];
 
 // Build pareto data dynamically from DB
 function buildParetoData() {
@@ -1435,7 +1436,7 @@ function renderParetoSummary(elId, data) {
   const top3cum = top3[top3.length-1]?.cum || 0;
   const el = document.getElementById(elId);
   const names = top3.map((d,i) => '<span style="color:var(--danger);font-weight:600;">'+(i+1)+'. '+d.full+'</span>').join('<br>');
-  el.innerHTML = names + '<br><span style="color:var(--primary);font-weight:700;">Akumulasi: ' + top3cum + '%</span>';
+  el.innerHTML = names + '<br><span style="color:var(--primary);font-weight:700;">Percent Accumulation to top-3: ' + top3cum + '%</span>';
 }
 
 let currentParetoIdx = 1;
@@ -1445,7 +1446,7 @@ function openPareto(idx) {
   const data  = idx === 1 ? pareto1 : pareto2;
   const total = idx === 1 ? total1  : total2;
   const title = idx === 1 ? 'Chart 1. NC per Category (Factor)' : 'Chart 2. NC per Mode (Finding Mode)';
-  const sub   = idx === 1 ? 'Kategori penyebab NC berdasarkan kolom Factor di Google Sheet' : 'Mode NC berdasarkan kolom Finding Mode di Google Sheet';
+  const sub   = idx === 1 ? 'The root-cause of NC according to Factor in Google Sheet' : 'Mode NC according to coulumb Finding Mode in Google Sheet';
 
   document.getElementById('paretoPopupTitle').textContent = title;
   document.getElementById('paretoPopupSubtitle').textContent = sub + '  |  Total: ' + total + ' NC  |  ' + (activeLayer==='All'?'All Layers':activeLayer);
@@ -1458,16 +1459,16 @@ function openPareto(idx) {
     data:{
       labels: data.map(d=>d.full),
       datasets:[
-        { type:'bar', label:'Jumlah NC', data:data.map(d=>d.count), backgroundColor:data.map((_,i)=>PARETO_COLORS[i%PARETO_COLORS.length]+'cc'), borderColor:data.map((_,i)=>PARETO_COLORS[i%PARETO_COLORS.length]), borderWidth:1.5, yAxisID:'y' },
-        { type:'line', label:'Kumulatif %', data:data.map(d=>d.cum), borderColor:'#c0392b', backgroundColor:'rgba(192,57,43,0.08)', pointRadius:5, pointBackgroundColor:'#c0392b', borderWidth:2.5, yAxisID:'y2', tension:0.3 }
+        { type:'bar', label:'Total NC', data:data.map(d=>d.count), backgroundColor:data.map((_,i)=>PARETO_COLORS[i%PARETO_COLORS.length]+'cc'), borderColor:data.map((_,i)=>PARETO_COLORS[i%PARETO_COLORS.length]), borderWidth:1.5, yAxisID:'y' },
+        { type:'line', label:'Accumulative %', data:data.map(d=>d.cum), borderColor:'#c0392b', backgroundColor:'rgba(192,57,43,0.08)', pointRadius:5, pointBackgroundColor:'#c0392b', borderWidth:2.5, yAxisID:'y2', tension:0.3 }
       ]
     },
     options:{
       responsive:true, maintainAspectRatio:false,
-      plugins:{ legend:{position:'bottom'}, tooltip:{ callbacks:{ afterLabel: ctx => ctx.dataset.label==='Jumlah NC' ? `Kumulatif: ${data[ctx.dataIndex].cum}%` : '' } } },
+      plugins:{ legend:{position:'bottom'}, tooltip:{ callbacks:{ afterLabel: ctx => ctx.dataset.label==='Total NC' ? `Cumulative: ${data[ctx.dataIndex].cum}%` : '' } } },
       scales:{
-        y:{beginAtZero:true, title:{display:true,text:'Jumlah NC'}, grid:{color:'rgba(0,0,0,0.05)'}},
-        y2:{position:'right', min:0, max:100, title:{display:true,text:'Kumulatif %'}, grid:{display:false}, ticks:{callback:v=>v+'%'}},
+        y:{beginAtZero:true, title:{display:true,text:'Total NC'}, grid:{color:'rgba(0,0,0,0.05)'}},
+        y2:{position:'right', min:0, max:100, title:{display:true,text:'Accumulative %'}, grid:{display:false}, ticks:{callback:v=>v+'%'}},
         x:{ticks:{maxRotation:35, font:{size:11}}}
       }
     }
@@ -1478,13 +1479,13 @@ function openPareto(idx) {
   const top3cum = top3[top3.length-1]?.cum||0;
   document.getElementById('paretoInsight').innerHTML =
     '<strong>&#128202; Analisis Pareto ' + (idx===1?'Per Kategori':'Per Mode NC') + ':</strong><br>' +
-    'Berdasarkan ' + (idx===1?'NC Category (Factor)':'NC Mode (Finding Mode)') + ', 3 kontributor terbesar secara berurutan adalah ' +
+    'According to ' + (idx===1?'NC Category (Factor)':'NC Mode (Finding Mode)') + ', top 3 contributor cosecitively is ' +
     '<strong style="color:var(--primary)">"' + (top3[0]&&top3[0].full||'-') + '"</strong>, ' +
     '<strong style="color:var(--primary)">"' + (top3[1]&&top3[1].full||'-') + '"</strong> &amp; ' +
     '<strong style="color:var(--primary)">"' + (top3[2]&&top3[2].full||'-') + '"</strong> ' +
-    'dengan persentase akumulasi sebesar <strong style="color:var(--danger);font-size:15px;">' + top3cum + '%</strong> ' +
-    '(dari total ' + total + ' NC' + (activeLayer!=='All'?' di '+activeLayer:'') + ').' +
-    '<br><br><strong>&#128161; Rekomendasi:</strong> Fokuskan program improvement pada kategori di atas untuk dampak terbesar terhadap pengurangan NC.'
+    'with accumulated percentage <strong style="color:var(--danger);font-size:15px;">' + top3cum + '%</strong> ' +
+    '(from total ' + total + ' NC' + (activeLayer!=='All'?' di '+activeLayer:'') + ').' +
+    '<br><br><strong>&#128161; Rekomendation:</strong> Focus improvement program on above kategory to highest NC contributor.'
 
   // Table
   let tableHtml = '<thead><tr><th>#</th><th>'+(idx===1?'NC Category':'NC Mode')+'</th><th>Count</th><th>%</th><th>Cum. %</th><th>Status</th></tr></thead><tbody>';
