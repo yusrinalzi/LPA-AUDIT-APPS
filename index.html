@@ -243,7 +243,7 @@
       <div class="avatar" id="navAvatar">G</div>
       <span id="navUserName">Guest</span>
       <span id="guestBadge" style="font-size:11px;background:rgba(255,255,255,0.2);padding:2px 8px;border-radius:10px;"></span>
-      <button class="btn-logout" onclick="openScriptSetup()">⚙️ Setup</button>
+
       <button class="btn-logout" onclick="doLogout()">Logout</button>
     </div>
   </nav>
@@ -416,37 +416,7 @@ Close</button>
 <!-- Detail panels moved inline below charts -->
 </div>
 
-<!-- Modal: Setup Apps Script URL -->
-<div class="modal-overlay" id="modalScriptUrl">
-  <div class="modal" style="max-width:560px;">
-    <div class="modal-header">
-      <h3>⚙️ Setup Koneksi Google Sheets</h3>
-      <button class="modal-close" onclick="closeModal('modalScriptUrl')">&times;</button>
-    </div>
-    <div class="modal-body">
-      <div style="background:#fff8e1;border:1px solid #ffe082;border-radius:8px;padding:14px;margin-bottom:16px;font-size:13px;line-height:1.7;">
-        <strong>Cara mendapatkan Apps Script URL:</strong><br>
-        1. Buka Google Sheet Anda<br>
-        2. Klik <strong>Extensions → Apps Script</strong><br>
-        3. Hapus semua kode yang ada, lalu paste isi file <strong>LPA_AppsScript.gs</strong><br>
-        4. Klik <strong>Save</strong> (ikon disket) <br>
-        5. Klik <strong>Deploy → New deployment</strong><br>
-        6. Type: <strong>Web app</strong> | Execute as: <strong>Me</strong> | Who has access: <strong>Anyone</strong><br>
-        7. Klik <strong>Deploy</strong> → copy URL yang muncul → paste di bawah ini
-      </div>
-      <div class="form-group">
-        <label style="font-size:13px;font-weight:600;color:var(--primary);display:block;margin-bottom:6px;">Apps Script Web App URL</label>
-        <input type="url" id="scriptUrlInput" placeholder="https://script.google.com/macros/s/AKfyc.../exec"
-          style="width:100%;padding:10px 14px;border:2px solid var(--border);border-radius:8px;font-size:13px;outline:none;">
-      </div>
-      <div id="urlStatus" style="font-size:12px;margin-top:6px;"></div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn-sm" onclick="closeModal('modalScriptUrl')" style="background:var(--bg2);border:1px solid var(--border);">Batal</button>
-      <button class="btn-sm btn-primary" onclick="saveScriptUrl()">&#128190; Save & Linked</button>
-    </div>
-  </div>
-</div>
+
 
 <div class="toast" id="toast"></div>
 
@@ -483,7 +453,7 @@ let chartNC = null, chartPlan = null;
 
 // ==================== GOOGLE SHEETS INTEGRATION via Apps Script ====================
 // Setelah deploy Apps Script, paste URL-nya di sini:
-let APPS_SCRIPT_URL = localStorage.getItem('lpa_script_url') || '';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxdQR4STXJr7vwlkuYAKtcEQ9lOb5HpXLG6Mb1_YGTQxt42cM_gfIar7e6WrbpdT78/exec'; // Hardcoded — no setup needed
 
 // ---- MAP ROWS dari Google Sheet (nama kolom asli) ke field pendek internal ----
 function mapAuditorRow(r) {
@@ -559,7 +529,7 @@ async function loadAllData() {
       source = '🔴 Apps Script Fail — Use embedded data';
     }
   } else {
-    source = '🟡 Embedded data (Apps Script URL not yet set — Click ⚙️ to setup)';
+    source = '🟡 Using embedded data (Apps Script connection failed)';
   }
 
   document.getElementById('loadingBar').style.display = 'none';
@@ -570,22 +540,9 @@ async function loadAllData() {
 }
 
 // ---- Save Apps Script URL ----
-function saveScriptUrl() {
-  const url = document.getElementById('scriptUrlInput').value.trim();
-  if (!url.startsWith('https://script.google.com')) {
-    alert('URL tidak valid. Harus diawali dengan https://script.google.com');
-    return;
-  }
-  APPS_SCRIPT_URL = url;
-  localStorage.setItem('lpa_script_url', url);
-  document.getElementById('modalScriptUrl').classList.remove('active');
-  showToast('Apps Script URL saved! Reload the data...', 'success');
-  loadAllData().then(() => { setupAuditForm(); renderFollowup(); });
-}
-function openScriptSetup() {
-  document.getElementById('scriptUrlInput').value = APPS_SCRIPT_URL;
-  document.getElementById('modalScriptUrl').classList.add('active');
-}
+// saveScriptUrl removed
+
+// Setup functions removed
 
 // ==================== AUTH ====================
 function doLogin() {
