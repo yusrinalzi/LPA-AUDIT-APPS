@@ -1235,7 +1235,7 @@ function renderFollowup() {
       </div>
       <div class="nc-actions">
         <button class="btn-sm btn-primary" onclick="saveNCFollowup(${i},'${r.No}')">&#128190; Save & Upload</button>
-        <button class="btn-sm btn-email" onclick="notifyPIC('${r.ResPerson}','${r.Auditor}','${r.IssueDate}','${r.FindingDesc.substring(0,60)}','${r.Line}','${r.No}')notifyPIC('${r.ResPerson}','${r.Auditor}','${r.IssueDate}','${r.FindingDesc.substring(0,60)}','${r.Line}','${r.No}')">&#9993; Notify PIC</button>
+        <button class="btn-sm btn-email" onclick="notifyPIC('${(r.ResPerson||'').replace(/'/g,"\\'")}','${(r.Auditor||'').replace(/'/g,"\\'")}','${(r.IssueDate||'').replace(/'/g,"\\'")}','${(r.FindingDesc||'').substring(0,60).replace(/'/g,"\\'")}','${(r.Line||'')}')">&#9993; Notify PIC</button>
         <span class="upload-status" id="ncSt_${i}"></span>
       </div>` : ''}
     </div>`;
@@ -1283,12 +1283,12 @@ function saveNCFollowup(i, no) {
   }
 }
 
-function notifyPIC(pic, auditor, issueDate, desc, line, id) {
+function notifyPIC(pic, auditor, issueDate, desc, line) {
   const picData = DB.auditors.find(a => a.Title === pic);
   const emailBody = `Hi, ${pic}.\n\nAn NC from Layer Process Audit has been issued by ${auditor} on ${issueDate}. The details of NC is: ${desc}, captured at ${line}.\n\nYou or your subordinate are assigned to close the NC. Please contact QA/QC team for more detail of the NC.\n\nThank you for your action(s).\n\nRegards,\nLPA Teams`;
   const to = picData ? picData.Email : '';
-  const cc = picData ? [picData.Email2, picData.N1Email, picData.qms1, picData.qms2].filter(Boolean).join(',') : '';
-  const subject = `[LPA NC Notification] NC from Line ${line} NC ID ${id} — Action Required`;
+  const cc = picData ? [picData.Email2, picData['N+1Email'], picData.qms1, picData.qms2].filter(Boolean).join(',') : '';
+  const subject = `[LPA NC Notification] NC from Line ${line} — Action Required`;
   const mailto = `mailto:${to}?cc=${encodeURIComponent(cc)}&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(emailBody)}`;
   window.open(mailto);
 }
