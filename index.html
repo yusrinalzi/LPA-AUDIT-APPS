@@ -33,25 +33,6 @@
   .page { display: none; min-height: 100vh; }
   .page.active { display: flex; flex-direction: column; }
 
-  /* ===== HOME PAGE ===== */
-  #homePage { background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 50%, var(--accent) 100%); justify-content: center; align-items: center; padding: 20px; min-height: 100vh; }
-  .home-card { background: white; border-radius: 20px; padding: 48px 40px; max-width: 520px; width: 100%; box-shadow: 0 8px 32px rgba(0,0,0,0.25); text-align: center; }
-  .home-logo { margin-bottom: 32px; }
-  .home-logo .logo-icon { width: 72px; height: 72px; background: var(--primary); border-radius: 18px; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 12px; }
-  .home-logo h1 { font-size: 24px; font-weight: 700; color: var(--primary); }
-  .home-logo p { color: var(--text-light); font-size: 13px; margin-top: 4px; }
-  .home-welcome { font-size: 15px; color: var(--text-light); margin-bottom: 28px; }
-  .home-welcome strong { color: var(--primary); }
-  .system-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
-  .system-card { background: var(--bg); border: 2px solid var(--border); border-radius: 16px; padding: 24px 16px; cursor: pointer; transition: all 0.2s; text-align: center; text-decoration: none; color: var(--text); }
-  .system-card:hover { border-color: var(--primary); background: white; box-shadow: 0 4px 20px rgba(2,69,60,0.15); transform: translateY(-2px); }
-  .system-card.active { border-color: var(--primary); background: var(--primary); color: white; }
-  .system-card .sys-icon { font-size: 36px; margin-bottom: 10px; }
-  .system-card .sys-title { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
-  .system-card .sys-desc { font-size: 12px; opacity: 0.7; }
-  .home-logout { color: var(--text-light); font-size: 13px; cursor: pointer; background: none; border: none; margin-top: 8px; }
-  .home-logout:hover { color: var(--primary); }
-
   /* ===== LOGIN ===== */
   #loginPage { background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 50%, var(--accent) 100%); justify-content: center; align-items: center; padding: 20px; }
   .login-card { background: white; border-radius: 20px; padding: 48px 40px; max-width: 420px; width: 100%; box-shadow: var(--shadow-lg); }
@@ -226,8 +207,8 @@
       <div class="logo-icon">
         <svg width="36" height="36" viewBox="0 0 36 36"><path d="M18 3L4 10v9c0 8.25 5.9 15.97 14 18 8.1-2.03 14-9.75 14-18V10L18 3zm-2 20l-4-4 1.41-1.41L16 20.17l7.59-7.59L25 14l-9 9z"/></svg>
       </div>
-      <h1>Quality Management System</h1>
-      <p>Volex Batam — QA Apps Portal</p>
+      <h1>LPA Audit System</h1>
+      <p>Layer Process Audit Management</p>
     </div>
     <div class="form-group">
       <label>User Name</label>
@@ -245,34 +226,7 @@
   </div>
 </div>
 
-<!-- HOME PAGE — System Selector -->
-<div id="homePage" class="page">
-  <div class="home-card">
-    <div class="home-logo">
-      <div class="logo-icon">
-        <svg width="36" height="36" viewBox="0 0 36 36" fill="white"><path d="M18 3L4 10v9c0 8.25 5.9 15.97 14 18 8.1-2.03 14-9.75 14-18V10L18 3zm-2 20l-4-4 1.41-1.41L16 20.17l7.59-7.59L25 14l-9 9z"/></svg>
-      </div>
-      <h1>Quality Management System</h1>
-      <p>Volex Batam — QA Apps Portal</p>
-    </div>
-    <p class="home-welcome">Welcome, <strong id="homeUserName">User</strong>! Please select a system:</p>
-    <div class="system-grid">
-      <div class="system-card" onclick="enterSystem('lpa')">
-        <div class="sys-icon">&#128203;</div>
-        <div class="sys-title">LPA Audit</div>
-        <div class="sys-desc">Layer Process Audit<br>Management System</div>
-      </div>
-      <div class="system-card" onclick="enterSystem('ncr')">
-        <div class="sys-icon">&#128196;</div>
-        <div class="sys-title">NC Report</div>
-        <div class="sys-desc">Non-Conformity Report<br>8D Management System</div>
-      </div>
-    </div>
-    <button class="home-logout" onclick="doLogout()">&#128682; Logout</button>
-  </div>
-</div>
-
-<!-- MAIN APP PAGES — LPA -->
+<!-- MAIN APP PAGES -->
 <div id="appShell" class="page">
   <!-- Navbar -->
   <nav class="navbar">
@@ -315,8 +269,6 @@
         <button class="layer-btn" data-layer="Layer 2" onclick="setLayerFilter('Layer 2')">Layer 2</button>
         <button class="layer-btn" data-layer="Layer 3" onclick="setLayerFilter('Layer 3')">Layer 3</button>
         <button class="layer-btn" data-layer="Layer 4" onclick="setLayerFilter('Layer 4')">Layer 4</button>
-		<button class="layer-btn" data-layer="USCAR 21" onclick="setLayerFilter('USCAR 21')">USCAR 21</button>
-		<button class="layer-btn" data-layer="USCAR 38" onclick="setLayerFilter('USCAR 38')">USCAR 38</button>
       </div>
     </div>
 
@@ -462,120 +414,6 @@ Close</button>
 </div>
 
 <!-- Detail panels moved inline below charts -->
-
-<!-- ===== NCR SYSTEM SHELL ===== -->
-<div id="ncrShell" class="page">
-  <!-- NCR Navbar -->
-  <nav class="navbar" id="ncrNavbar">
-    <div class="navbar-brand">
-      <svg width="24" height="24" viewBox="0 0 36 36" fill="white"><path d="M18 3L4 10v9c0 8.25 5.9 15.97 14 18 8.1-2.03 14-9.75 14-18V10L18 3zm-2 20l-4-4 1.41-1.41L16 20.17l7.59-7.59L25 14l-9 9z"/></svg>
-      NC Report
-    </div>
-    <div class="navbar-nav">
-      <button class="nav-link active" onclick="showNcrSection('ncrDashboard')">&#128202; Dashboard</button>
-      <button class="nav-link" onclick="showNcrSection('ncrForm')">&#128196; NC Report</button>
-    </div>
-    <div class="nav-user">
-      <div class="avatar" id="ncrAvatar">G</div>
-      <span id="ncrUserName">Guest</span>
-      <button class="btn-logout" onclick="backToHome()">&#127968; Home</button>
-      <button class="btn-logout" onclick="doLogout()">Logout</button>
-    </div>
-  </nav>
-
-  <!-- NCR DASHBOARD -->
-  <div id="ncrDashboard" class="page-content" style="display:block;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
-      <div class="page-title" style="margin-bottom:0;">&#128202; NCR Dashboard Overview</div>
-      <div style="display:flex;align-items:center;gap:10px;">
-        <span id="ncrDataSource" style="font-size:12px;color:var(--text-light);"></span>
-        <button onclick="loadNcrData()" style="padding:6px 12px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;font-size:12px;cursor:pointer;">&#128260; Refresh</button>
-      </div>
-    </div>
-    <div id="ncrLoadingBar" style="display:none;height:4px;background:linear-gradient(90deg,var(--primary),var(--accent));border-radius:2px;margin-bottom:16px;animation:pulse 1s infinite;"></div>
-
-    <!-- Filter by Product Category -->
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap;">
-      <span style="font-size:13px;font-weight:600;color:var(--primary);">&#127775; Filter by Product Category:</span>
-      <div id="ncrCatBtns" style="display:flex;gap:8px;flex-wrap:wrap;">
-        <button class="layer-btn active" data-cat="All" onclick="setNcrCatFilter('All')">All</button>
-        <button class="layer-btn" data-cat="EV" onclick="setNcrCatFilter('EV')">EV</button>
-        <button class="layer-btn" data-cat="PWC" onclick="setNcrCatFilter('PWC')">PWC</button>
-        <button class="layer-btn" data-cat="ICA" onclick="setNcrCatFilter('ICA')">ICA</button>
-        <button class="layer-btn" data-cat="Cable-PVC" onclick="setNcrCatFilter('Cable-PVC')">Cable-PVC</button>
-      </div>
-    </div>
-
-    <!-- NCR KPI Cards -->
-    <div id="ncrKpiCards" style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px;"></div>
-
-    <!-- NCR Charts + Pareto -->
-    <div style="display:grid;grid-template-columns:1fr 320px;gap:20px;margin-bottom:24px;">
-      <div class="chart-card">
-        <h3>&#128308; NCR Trend (PDR, NCMR, 8D) by Period</h3>
-        <div class="chart-wrap"><canvas id="chartNcrTrend"></canvas></div>
-      </div>
-      <!-- NCR Pareto Panel -->
-      <div class="chart-card" style="display:flex;flex-direction:column;gap:0;padding:16px;">
-        <div style="font-size:13px;font-weight:700;color:var(--primary);margin-bottom:12px;display:flex;align-items:center;gap:6px;">
-          &#128202; NC Pareto Analysis
-          <span style="font-size:10px;font-weight:400;color:var(--text-light);background:var(--bg2);padding:1px 6px;border-radius:8px;">Click for detail</span>
-        </div>
-        <div class="pareto-mini" onclick="openNcrPareto()" style="cursor:pointer;border:1px solid var(--border);border-radius:10px;padding:10px;transition:all 0.2s;" onmouseover="this.style.background='var(--bg)';this.style.borderColor='var(--accent)'" onmouseout="this.style.background='';this.style.borderColor='var(--border)'">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-            <span style="font-size:11px;font-weight:600;color:var(--primary);">Per NC Category</span>
-            <span style="font-size:10px;color:var(--accent);">&#128269; Enlarge</span>
-          </div>
-          <div style="height:160px;"><canvas id="miniNcrPareto"></canvas></div>
-          <div id="ncrParetoSummary" style="margin-top:7px;font-size:10px;color:var(--text-light);line-height:1.5;"></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- NCR Detail List (click bar) -->
-    <div id="ncrDetailPanel" style="display:none;margin-top:20px;">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-        <div id="ncrDetailTitle" style="font-size:16px;font-weight:700;color:var(--primary);"></div>
-        <button onclick="document.getElementById('ncrDetailPanel').style.display='none'" style="background:none;border:1px solid var(--border);border-radius:6px;padding:5px 12px;font-size:12px;cursor:pointer;">&#10005; Close</button>
-      </div>
-      <div id="ncrDetailContent"></div>
-    </div>
-  </div>
-
-  <!-- NCR FORM -->
-  <div id="ncrForm" class="page-content" style="display:none;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
-      <div class="page-title" style="margin-bottom:0;">&#128196; Non-Conformity Report</div>
-      <button onclick="openNewNcr()" class="btn-sm btn-primary" id="btnNewNcr">&#43; New NCR</button>
-    </div>
-
-    <!-- NCR List Table -->
-    <div id="ncrListView">
-      <div class="filter-bar" style="margin-bottom:16px;">
-        <label>Status:</label>
-        <select id="ncrStatusFilter" onchange="renderNcrList()" style="padding:7px 12px;border:1.5px solid var(--border);border-radius:7px;font-size:13px;">
-          <option value="">All</option>
-          <option value="Open">Open</option>
-          <option value="Closed">Closed</option>
-        </select>
-        <label>Type:</label>
-        <select id="ncrTypeFilter" onchange="renderNcrList()" style="padding:7px 12px;border:1.5px solid var(--border);border-radius:7px;font-size:13px;">
-          <option value="">All</option>
-          <option value="PDR">PDR</option>
-          <option value="NCMR">NCMR</option>
-          <option value="8D">8D</option>
-        </select>
-      </div>
-      <div id="ncrListContent"></div>
-    </div>
-
-    <!-- NCR Detail Form (opened when click item or new) -->
-    <div id="ncrDetailForm" style="display:none;">
-      <button onclick="closeNcrDetailForm()" style="margin-bottom:16px;padding:8px 16px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;cursor:pointer;font-size:13px;">&#8592; Back to List</button>
-      <div id="ncrFormContent"></div>
-    </div>
-  </div>
-</div>
 </div>
 
 
@@ -615,7 +453,7 @@ let chartNC = null, chartPlan = null;
 
 // ==================== GOOGLE SHEETS INTEGRATION via Apps Script ====================
 // Setelah deploy Apps Script, paste URL-nya di sini:
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw_dH7QuL5e3ssTisGIrxM64w91lOSNupZcCXuBPr42CDt4uftUi6IJzSJprZ5XliP3/exec'; // Hardcoded — no setup needed
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwYXLAe84YqZBwnMORlTjCb04SUPHuZz3LE5NREmI2NOuiLpMLJK-ySr6QtuSFQ-ppq/exec'; // Hardcoded — no setup needed
 
 // ---- MAP ROWS dari Google Sheet (nama kolom asli) ke field pendek internal ----
 function mapAuditorRow(r) {
@@ -682,8 +520,6 @@ async function loadAllData() {
     if (rQues && rQues.length > 0) { DB.auditQuestions  = rQues.map(mapQuestionRow); loaded++; }
     if (rPlan && rPlan.length > 0) { DB.auditPlan       = rPlan.map(mapPlanRow);     loaded++; }
     if (rSum  && rSum.length  > 0) { DB.summaryNC       = rSum.map(mapSummaryRow);   loaded++; }
-    // Also trigger NCR data load in background
-    fetchFromScript('getNcr').then(rNcr => { if (rNcr && rNcr.length > 0) DB_NCR = rNcr.map(mapNcrRow); });
 
     if (loaded === 4) {
       source = '🟢 Live from Google Sheets (Apps Script)';
@@ -732,68 +568,37 @@ function doGuestLogin() {
 
 function doLogout() {
   currentUser = null; isGuest = false;
-  ['homePage','appShell','ncrShell'].forEach(id => document.getElementById(id).classList.remove('active'));
   document.getElementById('loginPage').classList.add('active');
+  document.getElementById('appShell').classList.remove('active');
   document.getElementById('loginName').value = '';
   document.getElementById('loginId').value = '';
   document.getElementById('loginError').style.display = 'none';
 }
 
 function startApp() {
-  // After login — show Home Page to select system
   document.getElementById('loginPage').classList.remove('active');
-  document.getElementById('homePage').classList.add('active');
-  document.getElementById('homeUserName').textContent = currentUser.Title;
-  // Pre-load all data in background
-  loadAllData();
-  loadNcrData();
-}
-
-function enterSystem(system) {
-  document.getElementById('homePage').classList.remove('active');
-  if (system === 'lpa') {
-    document.getElementById('appShell').classList.add('active');
-    document.getElementById('navUserName').textContent = currentUser.Title;
-    document.getElementById('navAvatar').textContent = currentUser.Title[0].toUpperCase();
-    document.getElementById('guestBadge').textContent = isGuest ? 'Guest' : '';
-    document.getElementById('navAuditForm').style.display = isGuest ? 'none' : '';
+  document.getElementById('appShell').classList.add('active');
+  document.getElementById('navUserName').textContent = currentUser.Title;
+  document.getElementById('navAvatar').textContent = currentUser.Title[0].toUpperCase();
+  document.getElementById('guestBadge').textContent = isGuest ? 'Guest' : '';
+  // Hide audit form nav for guest
+  document.getElementById('navAuditForm').style.display = isGuest ? 'none' : '';
+  loadAllData().then(() => {
     setupAuditForm();
     renderFollowup();
-    showSection('dashboard');
-  } else if (system === 'ncr') {
-    document.getElementById('ncrShell').classList.add('active');
-    document.getElementById('ncrUserName').textContent = currentUser.Title;
-    document.getElementById('ncrAvatar').textContent = currentUser.Title[0].toUpperCase();
-    showNcrSection('ncrDashboard');
-    renderNcrList();
-  }
+  });
 }
 
-function backToHome() {
-  ['appShell','ncrShell'].forEach(id => document.getElementById(id).classList.remove('active'));
-  document.getElementById('homePage').classList.add('active');
-}
-
-// ==================== LPA NAVIGATION ====================
+// ==================== NAVIGATION ====================
 function showSection(id) {
   ['sectionDashboard','sectionAuditForm','sectionFollowup'].forEach(s => {
     document.getElementById(s).style.display = 'none';
   });
-  document.querySelectorAll('#appShell .nav-link').forEach(l => l.classList.remove('active'));
+  document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
   const map = {dashboard:'sectionDashboard', auditForm:'sectionAuditForm', followup:'sectionFollowup'};
   const btns = {dashboard:0, auditForm:1, followup:2};
   document.getElementById(map[id]).style.display = 'block';
-  document.querySelectorAll('#appShell .nav-link')[btns[id]].classList.add('active');
-}
-
-// ==================== NCR NAVIGATION ====================
-function showNcrSection(id) {
-  ['ncrDashboard','ncrForm'].forEach(s => document.getElementById(s).style.display = 'none');
-  document.querySelectorAll('#ncrNavbar .nav-link').forEach(l => l.classList.remove('active'));
-  document.getElementById(id).style.display = 'block';
-  const idx = id === 'ncrDashboard' ? 0 : 1;
-  document.querySelectorAll('#ncrNavbar .nav-link')[idx].classList.add('active');
-  if (id === 'ncrForm') renderNcrList();
+  document.querySelectorAll('.nav-link')[btns[id]].classList.add('active');
 }
 
 // ==================== CHARTS ====================
@@ -1291,7 +1096,7 @@ function submitAuditForm() {
 
   // Upload ke Google Sheets via Apps Script
   if (APPS_SCRIPT_URL) {
-    showToast(`⏳ Mengupload ke Google Sheets...`, 'success');
+    showToast(`⏳ Uploading data to Google Sheets...`, 'success');
     const ncPromises = ncItems.map(nc => postToScript('appendSummary', {
       'No': nc.No, 'Line': nc.Line, 'Layer': nc.Layer, 'Clause': nc.Clause, 'Period': nc.Period,
       'Finding Description': nc.FindingDesc, 'NCPicture': nc.NCPicture,
@@ -1313,7 +1118,7 @@ function submitAuditForm() {
       showToast(allOk ? 'OK: ' + ncItems.length + ' NC & data plan succesfully upload to Google Sheets!' : 'Some data fail to upload. Check console for details.', allOk ? 'success' : 'error');
     });
   } else {
-    showToast(`${ncItems.length} NC save in lokal. Please link the Apps Script to sync to Google Sheets.`, 'success');
+    showToast(`${ncItems.length} NC save in lokal only. Please link the Apps Script to sync to Google Sheets.`, 'success');
   }
   
   // Reset form
@@ -1472,7 +1277,7 @@ function saveNCFollowup(i, no) {
         buildCharts();
       });
     } else {
-      el.className = 'upload-status ok'; el.textContent = '✓ Save in lokal';
+      el.className = 'upload-status ok'; el.textContent = '✓ Save in lokal not in google sheet';
       buildCharts();
     }
   }
@@ -1502,9 +1307,9 @@ const PARETO_COLORS = ['#02453c','#02453c','#02453c','#02453c','#02453c','#02453
 function buildParetoData() {
   const nc = getFilteredNC();
 
-  // Chart 1: Per NC Category — from r.NCCategory (kolom "Factor" di Google Sheet)
+  // Chart 1: Per NC Category — from r.NCCategory from Google Sheet
   const catMap = {};
-  // Chart 2: Per NC Mode — from r.FindingMode (kolom "Finding Mode" di Google Sheet)
+  // Chart 2: Per NC Mode — from r.FindingMode from Google Sheet
   const modeMap = {};
 
   nc.forEach(r => {
@@ -1598,7 +1403,7 @@ function openPareto(idx) {
   const data  = idx === 1 ? pareto1 : pareto2;
   const total = idx === 1 ? total1  : total2;
   const title = idx === 1 ? 'Chart 1. NC per Category (Factor)' : 'Chart 2. NC per Mode (Finding Mode)';
-  const sub   = idx === 1 ? 'The root-cause of NC according to Factor in Google Sheet' : 'Mode NC according to coulumb Finding Mode in Google Sheet';
+  const sub   = idx === 1 ? 'The root-cause of NC according to category (Factor)' : 'Mode NC according to coulumb Finding Mode';
 
   document.getElementById('paretoPopupTitle').textContent = title;
   document.getElementById('paretoPopupSubtitle').textContent = sub + '  |  Total: ' + total + ' NC  |  ' + (activeLayer==='All'?'All Layers':activeLayer);
@@ -1637,7 +1442,7 @@ function openPareto(idx) {
     '<strong style="color:var(--primary)">"' + (top3[2]&&top3[2].full||'-') + '"</strong> ' +
     'with accumulated percentage <strong style="color:var(--danger);font-size:15px;">' + top3cum + '%</strong> ' +
     '(from total ' + total + ' NC' + (activeLayer!=='All'?' di '+activeLayer:'') + ').' +
-    '<br><br><strong>&#128161; Rekomendation:</strong> Focus improvement program on above kategory to highest NC contributor.'
+    '<br><br><strong>&#128161; Rekomendation:</strong> Focus improvement program on highest NC contributors to resolve 80% of issue.'
 
   // Table
   let tableHtml = '<thead><tr><th>#</th><th>'+(idx===1?'NC Category':'NC Mode')+'</th><th>Count</th><th>%</th><th>Cum. %</th><th>Status</th></tr></thead><tbody>';
@@ -1675,566 +1480,6 @@ function closePareto() {
 document.getElementById('paretoOverlay').addEventListener('click', function(e) {
   if (e.target === this) closePareto();
 });
-
-// ==================== NCR DATA ====================
-const NCR_SHEET = 'NCMR-PDR';
-let DB_NCR = [];
-let ncrActiveCat = 'All';
-let miniNcrChart = null, ncrTrendChart = null;
-
-async function loadNcrData() {
-  document.getElementById('ncrLoadingBar').style.display = 'block';
-  document.getElementById('ncrDataSource').textContent = 'Loading...';
-  const rows = await fetchFromScript('getNcr');
-  if (rows && rows.length > 0) {
-    DB_NCR = rows.map(mapNcrRow);
-    document.getElementById('ncrDataSource').textContent = 'Live from Google Sheets (Apps Script)';
-  } else {
-    document.getElementById('ncrDataSource').textContent = 'Using embedded data';
-  }
-  document.getElementById('ncrLoadingBar').style.display = 'none';
-  buildNcrDashboard();
-}
-
-function mapNcrRow(r) {
-  return {
-    No: r['ID No.']||r['ID No']||'',
-    ReportType: r['ReportType']||'',
-    ProductCategory: r['ProductCategory']||'',
-    IssuedBy: r['IssuedBy']||'',
-    IssuedDate: r['IssuedDate']||'',
-    ShiftTime: r['ShiftTime']||'',
-    CustomerName: r['CustomerName']||'',
-    PartNo: r['PartNo']||'',
-    AffectedQty: r['AffectedQty']||'',
-    SamplingQty: r['SamplingQty']||'',
-    IntlNCQty: r['IntlNCQty']||'',
-    DetectionLocation: r['DetectionLocation']||'',
-    DetailNC: r['DetailNC']||'',
-    NCCategory: r['NCCatagory']||r['NCCategory']||'',
-    NCMode: r['NCMode']||'',
-    HowItDetected: r['HowItDetected']||'',
-    PictureNC: r['PictureNC']||'',
-    InterimAction: r['InterimAction']||'',
-    SortingRequired: r['SortingRepairReworkRequired']||'',
-    SortingPIC: r['SortingReworkPIC']||'',
-    SortingRemark: r['SortingRemark']||'',
-    FinalRejectQty: r['FinalRejectQty']||'',
-    TotalManHour: r['TotalManHour']||'',
-    TotalOK: r['TotalOK']||'',
-    InterimActBy: r['InterimActBy']||'',
-    InterimActionDate: r['InterimActionDate']||'',
-    RootCauseOcc: r['RootCauseOcc']||'',
-    PicRCOccur: r['PicRCOccur1']||'',
-    RootCauseSkip: r['RootCause(Escape)']||'',
-    PicRCSkip: r['PicRCSkip1']||'',
-    Factor5M1E: r['5M1E-Factor']||'',
-    RCAnalysisBy: r['RC-AnalysisBy']||'',
-    RCAnalysisDate: r['RC-AnalysisDate']||'',
-    CAOccur: r['CorrectiveActOccur']||'',
-    CASkip: r['CorrectiveActSkip']||'',
-    CABy: r['CABy']||'',
-    CADate: r['CADate']||'',
-    CARemarks: r['CARemarks']||'',
-    PA1: r['PA1']||'',
-    PA2: r['PA2']||'',
-    PABy: r['PABy']||'',
-    PADate: r['PADate']||'',
-    PARemark: r['PARemark']||'',
-    ValidationRemark: r['ValidationRemark']||'',
-    ValidationResult: r['ValidationResult']||'',
-    ValidateBy: r['ValidateCAPABy']||'',
-    ValidationDate: r['ValidationCAPADate']||'',
-    StatusNC: r['StatusNC']||'Open',
-    CongratulationMsg: r['CongratulationMsg']||'',
-    ApprovedBy: r['ApprovedBy']||'',
-    CloseDate: r['CloseDate']||'',
-    Period: r['Period']||''
-  };
-}
-
-function getFilteredNcr() {
-  return ncrActiveCat === 'All' ? DB_NCR : DB_NCR.filter(r => r.ProductCategory === ncrActiveCat);
-}
-
-function setNcrCatFilter(cat) {
-  ncrActiveCat = cat;
-  document.querySelectorAll('#ncrCatBtns .layer-btn').forEach(b => b.classList.toggle('active', b.dataset.cat === cat));
-  buildNcrDashboard();
-}
-
-// ==================== NCR DASHBOARD ====================
-function buildNcrDashboard() {
-  buildNcrKPI();
-  buildNcrTrendChart();
-  buildNcrParetoMini();
-}
-
-function buildNcrKPI() {
-  const data = getFilteredNcr();
-  const total = data.length;
-  const pdr   = data.filter(r => r.ReportType === 'PDR').length;
-  const ncmr  = data.filter(r => r.ReportType === 'NCMR').length;
-  const d8    = data.filter(r => r.ReportType === '8D').length;
-
-  const kpis = [
-    { val: total, lbl: 'TOTAL NC',    sub: ncrActiveCat === 'All' ? 'All Categories' : ncrActiveCat, color: '#c0392b', bg: '#fdf1f0' },
-    { val: pdr,   lbl: 'Total PDR',   sub: 'Production Defect Report', color: '#02453c', bg: '#f0f5f4' },
-    { val: ncmr,  lbl: 'Total NCMR',  sub: 'Non-Conformity Material', color: '#1565c0', bg: '#e3f2fd' },
-    { val: d8,    lbl: 'Total 8D',    sub: '8 Disciplines Report', color: '#6a1b9a', bg: '#f3e5f5' },
-  ];
-  document.getElementById('ncrKpiCards').innerHTML = kpis.map(k =>
-    '<div class="kpi-card" style="border-top-color:'+k.color+';background:'+k.bg+';">' +
-    '<div class="kpi-val" style="color:'+k.color+';">'+k.val+'</div>' +
-    '<div class="kpi-lbl">'+k.lbl+'</div>' +
-    '<div class="kpi-sub">'+k.sub+'</div></div>'
-  ).join('');
-}
-
-function buildNcrTrendChart() {
-  const data = getFilteredNcr();
-  const byPeriod = {};
-  data.forEach(r => {
-    const d = parsePeriod(r.Period);
-    if (!d) return;
-    const k = fmtPeriod(d);
-    if (!byPeriod[k]) byPeriod[k] = {PDR:0, NCMR:0, '8D':0};
-    if (r.ReportType in byPeriod[k]) byPeriod[k][r.ReportType]++;
-  });
-  const periods = sortPeriods(Object.keys(byPeriod));
-  if (ncrTrendChart) ncrTrendChart.destroy();
-  const ctx = document.getElementById('chartNcrTrend').getContext('2d');
-  ncrTrendChart = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: periods,
-      datasets: [
-        { label:'PDR',  data: periods.map(p=>byPeriod[p].PDR),  backgroundColor:'rgba(192,57,43,0.75)',  borderColor:'#c0392b', borderWidth:1 },
-        { label:'NCMR', data: periods.map(p=>byPeriod[p].NCMR), backgroundColor:'rgba(39,174,96,0.75)',  borderColor:'#27ae60', borderWidth:1 },
-        { label:'8D',   data: periods.map(p=>byPeriod[p]['8D']),backgroundColor:'rgba(243,156,18,0.75)', borderColor:'#f39c12', borderWidth:1 }
-      ]
-    },
-    options: {
-      responsive:true, maintainAspectRatio:false,
-      onClick: (e, els) => { if(els.length>0) showNcrPeriodDetail(periods[els[0].index]); },
-      plugins:{ legend:{position:'bottom'}, tooltip:{callbacks:{footer:()=>'Click for detail'}} },
-      scales:{ y:{beginAtZero:true} }
-    }
-  });
-}
-
-function buildNcrParetoMini() {
-  const data = getFilteredNcr();
-  const catMap = {};
-  data.forEach(r => { const c = r.NCCategory||'Unknown'; catMap[c]=(catMap[c]||0)+1; });
-  const sorted = Object.entries(catMap).sort((a,b)=>b[1]-a[1]);
-  const total = data.length || 1;
-  let cum = 0;
-  const paretoData = sorted.map(([k,v]) => {
-    cum += v/total*100;
-    return { label: k.length>18?k.substring(0,16)+'…':k, full:k, count:v, cum:+cum.toFixed(1) };
-  });
-  if (miniNcrChart) miniNcrChart.destroy();
-  const ctx = document.getElementById('miniNcrPareto').getContext('2d');
-  miniNcrChart = new Chart(ctx, {
-    type:'bar',
-    data:{
-      labels: paretoData.map(d=>d.label),
-      datasets:[
-        { type:'bar',  data:paretoData.map(d=>d.count), backgroundColor:PARETO_COLORS.map(c=>c+'cc'), yAxisID:'y' },
-        { type:'line', data:paretoData.map(d=>d.cum),   borderColor:'#c0392b', pointRadius:2, borderWidth:1.5, yAxisID:'y2', tension:0.3 }
-      ]
-    },
-    options:{ responsive:true, maintainAspectRatio:false,
-      plugins:{ legend:{display:false} },
-      scales:{ y:{beginAtZero:true,grid:{display:false},ticks:{font:{size:8}}}, y2:{position:'right',min:0,max:100,grid:{display:false},ticks:{display:false}}, x:{ticks:{font:{size:7},maxRotation:25}} }
-    }
-  });
-  // Summary text
-  const top3 = paretoData.slice(0,3);
-  const top3cum = top3[top3.length-1]?.cum||0;
-  document.getElementById('ncrParetoSummary').innerHTML =
-    top3.map((d,i)=>'<span style="color:var(--danger);font-weight:600;">'+(i+1)+'. '+d.full+'</span>').join('<br>') +
-    '<br><span style="color:var(--primary);font-weight:700;">Accum: '+top3cum+'%</span>';
-}
-
-function showNcrPeriodDetail(period) {
-  const rows = getFilteredNcr().filter(r => { const d=parsePeriod(r.Period); return d && fmtPeriod(d)===period; });
-  document.getElementById('ncrDetailTitle').textContent = 'NCR Detail — ' + period + ' (' + rows.length + ' items)';
-  let html = '<div style="overflow-x:auto;"><table class="detail-table"><thead><tr><th>ID</th><th>Type</th><th>Category</th><th>Part No</th><th>Detail NC</th><th>NC Mode</th><th>Issued By</th><th>Status</th><th>Action</th></tr></thead><tbody>';
-  rows.forEach(r => {
-    const st = r.StatusNC||'Open';
-    html += '<tr><td>'+r.No+'</td><td><span class="badge" style="background:#e3f2fd;color:#1565c0;">'+r.ReportType+'</span></td><td>'+r.NCCategory+'</td><td>'+r.PartNo+'</td><td style="max-width:180px;font-style:italic;color:var(--danger-light);">'+(r.DetailNC||'').substring(0,60)+'</td><td>'+r.NCMode+'</td><td>'+r.IssuedBy+'</td><td><span class="badge badge-'+(st.toLowerCase()==='closed'?'closed':'open')+'">'+st+'</span></td><td><button class="btn-sm btn-primary" onclick="openNcrById(''+r.No+'')">&#128269; Open</button></td></tr>';
-  });
-  html += '</tbody></table></div>';
-  document.getElementById('ncrDetailContent').innerHTML = html;
-  const panel = document.getElementById('ncrDetailPanel');
-  panel.style.display = 'block';
-  panel.scrollIntoView({behavior:'smooth', block:'start'});
-}
-
-function openNcrPareto() {
-  // Reuse LPA pareto popup with NCR data
-  const data = getFilteredNcr();
-  const catMap = {};
-  data.forEach(r => { const c=r.NCCategory||'Unknown'; catMap[c]=(catMap[c]||0)+1; });
-  const sorted = Object.entries(catMap).sort((a,b)=>b[1]-a[1]);
-  const total = data.length||1; let cum=0;
-  const paretoData = sorted.map(([k,v])=>{ cum+=v/total*100; return {label:k,full:k,count:v,pct:+(v/total*100).toFixed(1),cum:+cum.toFixed(1)}; });
-  document.getElementById('paretoPopupTitle').textContent = 'NCR Pareto — Per NC Category';
-  document.getElementById('paretoPopupSubtitle').textContent = 'Category: '+(ncrActiveCat==='All'?'All':ncrActiveCat)+'  |  Total: '+total+' NCR';
-  if (bigChart) bigChart.destroy();
-  const ctx = document.getElementById('bigPareto').getContext('2d');
-  bigChart = new Chart(ctx, {
-    type:'bar', data:{ labels:paretoData.map(d=>d.full),
-      datasets:[
-        {type:'bar',label:'Count',data:paretoData.map(d=>d.count),backgroundColor:PARETO_COLORS.map((c,i)=>PARETO_COLORS[i%PARETO_COLORS.length]+'cc'),yAxisID:'y'},
-        {type:'line',label:'Cumulative %',data:paretoData.map(d=>d.cum),borderColor:'#c0392b',pointRadius:4,borderWidth:2,yAxisID:'y2',tension:0.3}
-      ]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'}},scales:{y:{beginAtZero:true},y2:{position:'right',min:0,max:100,ticks:{callback:v=>v+'%'}},x:{ticks:{maxRotation:35}}}}
-  });
-  const top3=paretoData.slice(0,3); const top3cum=top3[top3.length-1]?.cum||0;
-  document.getElementById('paretoInsight').innerHTML =
-    '<strong>&#128202; NCR Pareto Analysis:</strong><br>Top 3 NC Category: '+
-    top3.map(d=>'<strong style="color:var(--primary)">"'+d.full+'"</strong>').join(', ')+
-    ' with cumulative <strong style="color:var(--danger);font-size:15px;">'+top3cum+'%</strong> (Total: '+total+' NCR).'+
-    '<br><br><strong>&#128161; Recommendation:</strong> Focus improvement on the top categories above for maximum NC reduction impact.';
-  let tbl='<thead><tr><th>#</th><th>NC Category</th><th>Count</th><th>%</th><th>Cum.%</th><th>Priority</th></tr></thead><tbody>';
-  paretoData.forEach((d,i)=>{ const isTop=i<3; tbl+='<tr style="'+(isTop?'background:#fff8e1':'')+'"><td><strong>'+(i+1)+'</strong></td><td>'+d.full+(isTop?'<span style="margin-left:6px;font-size:10px;background:#f39c12;color:white;padding:1px 6px;border-radius:8px;">Top'+(i+1)+'</span>':'')+'</td><td>'+d.count+'</td><td>'+d.pct+'%</td><td><strong style="color:'+(d.cum<=80?'var(--danger)':'var(--text-light)')+'">'+d.cum+'%</strong></td><td>'+(d.cum<=80?'<span class="badge badge-open">Priority</span>':'<span class="badge badge-done">Monitor</span>')+'</td></tr>'; });
-  document.getElementById('paretoTable').innerHTML = tbl+'</tbody>';
-  document.getElementById('paretoOverlay').style.display='flex';
-}
-
-// ==================== NCR FORM ====================
-const NC_CATEGORIES = ['Reject Hi-pot Test','Dim. OoS','Product Damage','Not Follow WI/Procedure','WI not Available','Wrong Do','No Prev. Mtn.','Not Update WI/CP','Other'];
-const NC_MODES = ['Reject testing','Visual defect','Dimensional','Assembly error','Documentation','Process error','Material issue','Other'];
-const RC_FACTORS = ['Man','Machine','Method','Material','Measurement','Environment'];
-const VALIDATION_RESULTS = ['Accepted','Rejected','Pending'];
-
-let currentNcrId = null;
-let ncrFormData = {};
-
-function renderNcrList() {
-  const typeFilter = document.getElementById('ncrTypeFilter').value;
-  const statusFilter = document.getElementById('ncrStatusFilter').value;
-  let rows = DB_NCR.filter(r => {
-    if (typeFilter && r.ReportType !== typeFilter) return false;
-    if (statusFilter && r.StatusNC !== statusFilter) return false;
-    return true;
-  });
-  if (rows.length === 0) {
-    document.getElementById('ncrListContent').innerHTML = '<div style="padding:40px;text-align:center;color:var(--text-light);">No NCR found. Click "+ New NCR" to create one.</div>';
-    return;
-  }
-  let html = '<div style="overflow-x:auto;"><table class="detail-table"><thead><tr><th>ID No.</th><th>Type</th><th>Category</th><th>Customer</th><th>Part No</th><th>Detail NC</th><th>Issued By</th><th>Issued Date</th><th>Status</th><th>Action</th></tr></thead><tbody>';
-  rows.forEach(r => {
-    const st = r.StatusNC||'Open';
-    html += '<tr><td><strong>'+r.No+'</strong></td><td><span class="badge" style="background:#e3f2fd;color:#1565c0;">'+r.ReportType+'</span></td><td>'+r.NCCategory+'</td><td>'+r.CustomerName+'</td><td>'+r.PartNo+'</td><td style="max-width:160px;font-style:italic;color:var(--danger-light);">'+(r.DetailNC||'').substring(0,50)+'</td><td>'+r.IssuedBy+'</td><td>'+fmtDate(r.IssuedDate)+'</td><td><span class="badge badge-'+(st.toLowerCase()==='closed'?'closed':'open')+'">'+st+'</span></td><td><button class="btn-sm btn-primary" onclick="openNcrById(''+r.No+'')">&#128269; Open</button></td></tr>';
-  });
-  html += '</tbody></table></div>';
-  document.getElementById('ncrListContent').innerHTML = html;
-}
-
-function openNcrById(id) {
-  const ncr = DB_NCR.find(r => String(r.No) === String(id));
-  if (!ncr) return;
-  currentNcrId = id;
-  ncrFormData = Object.assign({}, ncr);
-  showNcrDetailForm(false);
-}
-
-function openNewNcr() {
-  currentNcrId = null;
-  const now = new Date();
-  ncrFormData = {
-    No: 'AUTO', ReportType:'PDR', ProductCategory:'', IssuedBy: currentUser.Title,
-    IssuedDate: now.toISOString().split('T')[0], ShiftTime:'', CustomerName:'',
-    PartNo:'', AffectedQty:'', SamplingQty:'', IntlNCQty:'', DetectionLocation:'',
-    DetailNC:'', NCCategory:'', NCMode:'', HowItDetected:'', InterimAction:'',
-    SortingRequired:'No', SortingPIC:'', StatusNC:'Open', Period: fmtPeriod(now)
-  };
-  showNcrDetailForm(true);
-}
-
-function closeNcrDetailForm() {
-  document.getElementById('ncrDetailForm').style.display = 'none';
-  document.getElementById('ncrListView').style.display = 'block';
-  renderNcrList();
-}
-
-function showNcrDetailForm(isNew) {
-  document.getElementById('ncrListView').style.display = 'none';
-  document.getElementById('ncrDetailForm').style.display = 'block';
-  const r = ncrFormData;
-  const auditorOpts = DB.auditors.map(a=>'<option value="'+a.Title+'" '+(a.Title===r.SortingPIC?'selected':'')+'>'+a.Title+'</option>').join('');
-  const rcFactorOpts = RC_FACTORS.map(f=>'<option value="'+f+'" '+(f===r.Factor5M1E?'selected':'')+'>'+f+'</option>').join('');
-  const ncCatOpts = NC_CATEGORIES.map(c=>'<option value="'+c+'" '+(c===r.NCCategory?'selected':'')+'>'+c+'</option>').join('');
-  const ncModeOpts = NC_MODES.map(m=>'<option value="'+m+'" '+(m===r.NCMode?'selected':'')+'>'+m+'</option>').join('');
-
-  const isReadOnly = !isNew && !['QA','N+2','Management'].includes(currentUser.UserRule);
-  const ro = isReadOnly ? 'readonly' : '';
-  const roSel = isReadOnly ? 'disabled' : '';
-
-  document.getElementById('ncrFormContent').innerHTML = `
-    <div style="background:white;border-radius:16px;padding:24px;box-shadow:var(--shadow);margin-bottom:16px;">
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap;">
-        <span style="font-size:14px;font-weight:700;color:var(--primary);">NCR ID: <strong style="color:var(--danger);">${r.No}</strong></span>
-        <select id="nf_type" ${roSel} style="padding:6px 12px;border:2px solid var(--primary);border-radius:8px;font-weight:600;color:var(--primary);">
-          <option ${r.ReportType==='PDR'?'selected':''}>PDR</option>
-          <option ${r.ReportType==='NCMR'?'selected':''}>NCMR</option>
-          <option ${r.ReportType==='8D'?'selected':''}>8D</option>
-        </select>
-        <select id="nf_prodcat" ${roSel} style="padding:6px 12px;border:2px solid var(--primary);border-radius:8px;font-weight:600;color:var(--primary);">
-          <option value="">-- Product Category --</option>
-          ${['EV','PWC','ICA','Cable-PVC'].map(c=>'<option '+(c===r.ProductCategory?'selected':'')+'>'+c+'</option>').join('')}
-        </select>
-        <span class="badge badge-${(r.StatusNC||'Open').toLowerCase()==='closed'?'closed':'open'}" style="font-size:12px;padding:5px 14px;">${r.StatusNC||'Open'}</span>
-      </div>
-
-      <!-- D2: Description of NC -->
-      <div style="border-left:4px solid var(--primary);padding-left:16px;margin-bottom:20px;">
-        <div style="font-size:14px;font-weight:700;color:var(--primary);margin-bottom:14px;">D2 — Description of NC</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-          <div class="form-field"><label>Issued By</label><div class="field-val">${r.IssuedBy||currentUser.Title}</div></div>
-          <div class="form-field"><label>Part No.</label><input type="text" id="nf_partno" value="${r.PartNo||''}" ${ro} style="padding:8px 12px;border:2px solid var(--border);border-radius:8px;font-size:14px;"></div>
-          <div class="form-field"><label>Issued Date</label><div class="field-val">${fmtDate(r.IssuedDate)}</div></div>
-          <div class="form-field"><label>Detection Location</label><input type="text" id="nf_location" value="${r.DetectionLocation||''}" ${ro} style="padding:8px 12px;border:2px solid var(--border);border-radius:8px;font-size:14px;"></div>
-          <div class="form-field"><label>Shift / Time</label><input type="text" id="nf_shift" value="${r.ShiftTime||''}" ${ro} style="padding:8px 12px;border:2px solid var(--border);border-radius:8px;font-size:14px;" placeholder="e.g. 1st shift/08:00"></div>
-          <div class="form-field"><label>Affected Qty</label><input type="number" id="nf_affqty" value="${r.AffectedQty||''}" ${ro} style="padding:8px 12px;border:2px solid var(--border);border-radius:8px;font-size:14px;"></div>
-          <div class="form-field"><label>Customer</label><input type="text" id="nf_customer" value="${r.CustomerName||''}" ${ro} style="padding:8px 12px;border:2px solid var(--border);border-radius:8px;font-size:14px;"></div>
-          <div class="form-field"><label>Sampling Qty</label><input type="number" id="nf_sampqty" value="${r.SamplingQty||''}" ${ro} style="padding:8px 12px;border:2px solid var(--border);border-radius:8px;font-size:14px;"></div>
-          <div class="form-field"><label>NC Category</label><select id="nf_nccat" ${roSel} style="padding:8px 12px;border:2px solid var(--border);border-radius:8px;font-size:14px;"><option value="">-- Select --</option>${ncCatOpts}</select></div>
-          <div class="form-field"><label>Intl. NC Qty</label><input type="number" id="nf_intlqty" value="${r.IntlNCQty||''}" ${ro} style="padding:8px 12px;border:2px solid var(--border);border-radius:8px;font-size:14px;"></div>
-          <div class="form-field"><label>NC Mode</label><select id="nf_ncmode" ${roSel} style="padding:8px 12px;border:2px solid var(--border);border-radius:8px;font-size:14px;"><option value="">-- Select --</option>${ncModeOpts}</select></div>
-          <div class="form-field"><label>Sorting Required?</label><select id="nf_sorting" ${roSel} onchange="toggleSortingPIC()" style="padding:8px 12px;border:2px solid var(--border);border-radius:8px;font-size:14px;"><option ${r.SortingRequired==='Yes'?'selected':''}>Yes</option><option ${r.SortingRequired!=='Yes'?'selected':''}>No</option></select></div>
-        </div>
-        <div id="sortingPICDiv" style="margin-top:12px;display:${r.SortingRequired==='Yes'?'block':'none'};">
-          <div class="form-field"><label>Sorting PIC</label><select id="nf_sortpic" ${roSel} style="padding:8px 12px;border:2px solid var(--border);border-radius:8px;font-size:14px;width:100%;"><option value="">-- Select PIC --</option>${auditorOpts}</select></div>
-        </div>
-        <div style="margin-top:12px;"><div class="form-field"><label>How it Detected</label><textarea id="nf_howdetect" ${ro} rows="2" style="width:100%;padding:8px 12px;border:2px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;">${r.HowItDetected||''}</textarea></div></div>
-        <div style="margin-top:12px;"><div class="form-field"><label>Detail NC</label><textarea id="nf_detail" ${ro} rows="3" style="width:100%;padding:8px 12px;border:2px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;">${r.DetailNC||''}</textarea></div></div>
-        <div style="margin-top:12px;"><div class="form-field"><label>Interim Action</label><textarea id="nf_interim" ${ro} rows="2" style="width:100%;padding:8px 12px;border:2px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;">${r.InterimAction||''}</textarea></div></div>
-        ${isNew ? '<button class="btn-submit" onclick="submitNewNcr()" style="margin-top:16px;">&#128228; Submit NCR (D2)</button>' : ''}
-      </div>
-
-      <!-- D3-D8 tabs (only show if existing NCR) -->
-      ${!isNew ? renderDisciplineTabs(r, auditorOpts, rcFactorOpts) : ''}
-    </div>`;
-}
-
-function toggleSortingPIC() {
-  const val = document.getElementById('nf_sorting').value;
-  document.getElementById('sortingPICDiv').style.display = val==='Yes' ? 'block' : 'none';
-}
-
-function renderDisciplineTabs(r, auditorOpts, rcFactorOpts) {
-  return `
-  <div style="margin-top:24px;">
-    <!-- Tab buttons D3-D8 -->
-    <div style="display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap;">
-      ${['D3','D4','D5','D6','D7','D8'].map((d,i)=>'<button class="layer-btn '+(i===0?'active':'')+'" onclick="showDTab(''+d+'')" id="dtab_'+d+'">'+d+'</button>').join('')}
-    </div>
-
-    <!-- D3: Interim/Containment -->
-    <div id="dSection_D3" style="border-left:4px solid var(--accent);padding:16px;background:var(--bg);border-radius:8px;">
-      <div style="font-size:14px;font-weight:700;color:var(--primary);margin-bottom:12px;">D3 — Interim / Containment Action</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-        <div class="form-field"><label>Interim Act By</label><select id="d3_by" style="padding:8px 12px;border:2px solid var(--border);border-radius:8px;font-size:14px;width:100%;"><option value="">-- Select --</option>${auditorOpts}</select></div>
-        <div class="form-field"><label>Sorting PIC</label><select id="d3_sortpic" style="padding:8px 12px;border:2px solid var(--border);border-radius:8px;font-size:14px;width:100%;"><option value="">-- Select --</option>${auditorOpts}</select></div>
-        <div class="form-field"><label>Qty OK after sort</label><input type="number" id="d3_qtyok" value="${r.TotalOK||''}" style="padding:8px 12px;border:2px solid var(--border);border-radius:8px;font-size:14px;"></div>
-        <div class="form-field"><label>Qty Reject Final</label><input type="number" id="d3_qtyrej" value="${r.FinalRejectQty||''}" style="padding:8px 12px;border:2px solid var(--border);border-radius:8px;font-size:14px;"></div>
-        <div class="form-field"><label>Total Man-Hours</label><input type="number" id="d3_manhour" value="${r.TotalManHour||''}" style="padding:8px 12px;border:2px solid var(--border);border-radius:8px;font-size:14px;"></div>
-        <div class="form-field"><label>Interim Act Date</label><input type="date" id="d3_date" value="${r.InterimActionDate||''}" style="padding:8px 12px;border:2px solid var(--border);border-radius:8px;font-size:14px;"></div>
-      </div>
-      <div style="margin-top:12px;"><div class="form-field"><label>Interim Act Remarks</label><textarea id="d3_remark" rows="2" style="width:100%;padding:8px 12px;border:2px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;">${r.SortingRemark||''}</textarea></div></div>
-      <div style="margin-top:14px;display:flex;gap:10px;align-items:center;">
-        <button class="btn-sm btn-primary" onclick="submitDiscipline('D3')">&#128228; Submit D3</button>
-        <span class="upload-status" id="d3_status"></span>
-      </div>
-    </div>
-
-    <!-- D4: Root Cause -->
-    <div id="dSection_D4" style="display:none;border-left:4px solid var(--warning);padding:16px;background:var(--bg);border-radius:8px;">
-      <div style="font-size:14px;font-weight:700;color:var(--primary);margin-bottom:12px;">D4 — Identify, Analyse & Verify Root Cause</div>
-      <div class="form-field" style="margin-bottom:12px;"><label>A. Root-Cause (Occurrence)</label><textarea id="d4_rcocc" rows="3" style="width:100%;padding:8px 12px;border:2px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;">${r.RootCauseOcc||''}</textarea></div>
-      <div class="form-field" style="margin-bottom:12px;"><label>B. Root-Cause (Escape/Skip)</label><textarea id="d4_rcskip" rows="3" style="width:100%;padding:8px 12px;border:2px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;">${r.RootCauseSkip||''}</textarea></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
-        <div class="form-field"><label>RC Factor (5M+E)</label><select id="d4_factor" style="padding:8px 12px;border:2px solid var(--border);border-radius:8px;font-size:14px;width:100%;"><option value="">-- Select --</option>${rcFactorOpts}</select></div>
-        <div class="form-field"><label>RC Analysis By</label><select id="d4_by" style="padding:8px 12px;border:2px solid var(--border);border-radius:8px;font-size:14px;width:100%;"><option value="">-- Select --</option>${auditorOpts}</select></div>
-        <div class="form-field"><label>RC Analysis Date</label><input type="date" id="d4_date" value="${r.RCAnalysisDate||''}" style="padding:8px 12px;border:2px solid var(--border);border-radius:8px;font-size:14px;"></div>
-      </div>
-      <div style="margin-top:14px;display:flex;gap:10px;align-items:center;">
-        <button class="btn-sm btn-primary" onclick="submitDiscipline('D4')">&#128228; Submit D4</button>
-        <span class="upload-status" id="d4_status"></span>
-      </div>
-    </div>
-
-    <!-- D5: Corrective Action -->
-    <div id="dSection_D5" style="display:none;border-left:4px solid #1565c0;padding:16px;background:var(--bg);border-radius:8px;">
-      <div style="font-size:14px;font-weight:700;color:var(--primary);margin-bottom:12px;">D5 — Corrective Action</div>
-      <div class="form-field" style="margin-bottom:12px;"><label>A. Corrective Action for Occurrence</label><textarea id="d5_caocc" rows="3" style="width:100%;padding:8px 12px;border:2px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;">${r.CAOccur||''}</textarea></div>
-      <div class="form-field" style="margin-bottom:12px;"><label>B. Corrective Action for Escape/Skip</label><textarea id="d5_caskip" rows="3" style="width:100%;padding:8px 12px;border:2px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;">${r.CASkip||''}</textarea></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
-        <div class="form-field"><label>CA Remarks</label><input type="text" id="d5_remark" value="${r.CARemarks||''}" style="padding:8px 12px;border:2px solid var(--border);border-radius:8px;font-size:14px;"></div>
-        <div class="form-field"><label>CA By</label><select id="d5_by" style="padding:8px 12px;border:2px solid var(--border);border-radius:8px;font-size:14px;width:100%;"><option value="">-- Select --</option>${auditorOpts}</select></div>
-        <div class="form-field"><label>CA Date</label><input type="date" id="d5_date" value="${r.CADate||''}" style="padding:8px 12px;border:2px solid var(--border);border-radius:8px;font-size:14px;"></div>
-      </div>
-      <div style="margin-top:14px;display:flex;gap:10px;align-items:center;">
-        <button class="btn-sm btn-primary" onclick="submitDiscipline('D5')">&#128228; Submit D5</button>
-        <span class="upload-status" id="d5_status"></span>
-      </div>
-    </div>
-
-    <!-- D6: Validation -->
-    <div id="dSection_D6" style="display:none;border-left:4px solid #6a1b9a;padding:16px;background:var(--bg);border-radius:8px;">
-      <div style="font-size:14px;font-weight:700;color:var(--primary);margin-bottom:12px;">D6 — Validation of Corrective Action</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
-        <div class="form-field"><label>A. CA for Occurrence (view)</label><div class="field-val" style="font-size:13px;">${r.CAOccur||'—'}</div></div>
-        <div class="form-field"><label>B. CA for Escape (view)</label><div class="field-val" style="font-size:13px;">${r.CASkip||'—'}</div></div>
-      </div>
-      <div class="form-field" style="margin-bottom:12px;"><label>Validation Remarks</label><textarea id="d6_remark" rows="2" style="width:100%;padding:8px 12px;border:2px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;">${r.ValidationRemark||''}</textarea></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
-        <div class="form-field"><label>Validation Result</label><select id="d6_result" style="padding:8px 12px;border:2px solid var(--border);border-radius:8px;font-size:14px;width:100%;"><option value="">-- Select --</option>${VALIDATION_RESULTS.map(v=>'<option '+(v===r.ValidationResult?'selected':'')+'>'+v+'</option>').join('')}</select></div>
-        <div class="form-field"><label>Validated By</label><select id="d6_by" style="padding:8px 12px;border:2px solid var(--border);border-radius:8px;font-size:14px;width:100%;"><option value="">-- Select --</option>${auditorOpts}</select></div>
-        <div class="form-field"><label>Validation Date</label><input type="date" id="d6_date" value="${r.ValidationDate||''}" style="padding:8px 12px;border:2px solid var(--border);border-radius:8px;font-size:14px;"></div>
-      </div>
-      <div style="margin-top:14px;display:flex;gap:10px;align-items:center;">
-        <button class="btn-sm btn-primary" onclick="submitDiscipline('D6')">&#128228; Submit D6</button>
-        <span class="upload-status" id="d6_status"></span>
-      </div>
-    </div>
-
-    <!-- D7: Preventive Action -->
-    <div id="dSection_D7" style="display:none;border-left:4px solid var(--success);padding:16px;background:var(--bg);border-radius:8px;">
-      <div style="font-size:14px;font-weight:700;color:var(--primary);margin-bottom:12px;">D7 — Preventive Action</div>
-      <div class="form-field" style="margin-bottom:12px;"><label>A. Preventive Action for Occurrence</label><textarea id="d7_pa1" rows="3" style="width:100%;padding:8px 12px;border:2px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;">${r.PA1||''}</textarea></div>
-      <div class="form-field" style="margin-bottom:12px;"><label>B. Preventive Action for Escape</label><textarea id="d7_pa2" rows="3" style="width:100%;padding:8px 12px;border:2px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;">${r.PA2||''}</textarea></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
-        <div class="form-field"><label>PA Remarks</label><input type="text" id="d7_remark" value="${r.PARemark||''}" style="padding:8px 12px;border:2px solid var(--border);border-radius:8px;font-size:14px;"></div>
-        <div class="form-field"><label>PA By</label><select id="d7_by" style="padding:8px 12px;border:2px solid var(--border);border-radius:8px;font-size:14px;width:100%;"><option value="">-- Select --</option>${auditorOpts}</select></div>
-        <div class="form-field"><label>PA Date</label><input type="date" id="d7_date" value="${r.PADate||''}" style="padding:8px 12px;border:2px solid var(--border);border-radius:8px;font-size:14px;"></div>
-      </div>
-      <div style="margin-top:14px;display:flex;gap:10px;align-items:center;">
-        <button class="btn-sm btn-primary" onclick="submitDiscipline('D7')">&#128228; Submit D7</button>
-        <span class="upload-status" id="d7_status"></span>
-      </div>
-    </div>
-
-    <!-- D8: Close Out -->
-    <div id="dSection_D8" style="display:none;border-left:4px solid var(--yellow);padding:16px;background:var(--bg);border-radius:8px;">
-      <div style="font-size:14px;font-weight:700;color:var(--primary);margin-bottom:12px;">D8 — Close Out & Congratulation</div>
-      <div class="form-field" style="margin-bottom:12px;"><label>Congratulation Message</label><textarea id="d8_msg" rows="3" style="width:100%;padding:8px 12px;border:2px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;">${r.CongratulationMsg||''}</textarea></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-        <div class="form-field"><label>Validation Result / Final Status</label><select id="d8_result" style="padding:8px 12px;border:2px solid var(--border);border-radius:8px;font-size:14px;width:100%;"><option value="">-- Select --</option><option ${r.StatusNC==='Open'?'selected':''}>Open</option><option ${r.StatusNC==='Closed'?'selected':''}>Closed</option><option ${r.StatusNC==='Rejected'?'selected':''}>Rejected</option></select></div>
-        <div class="form-field"><label>Approved By</label><select id="d8_approver" style="padding:8px 12px;border:2px solid var(--border);border-radius:8px;font-size:14px;width:100%;"><option value="">-- Select --</option>${auditorOpts}</select></div>
-      </div>
-      <div style="margin-top:14px;display:flex;gap:10px;align-items:center;">
-        <button class="btn-sm btn-success" onclick="submitDiscipline('D8')">&#9989; Complete Report Summary</button>
-        <span class="upload-status" id="d8_status"></span>
-      </div>
-    </div>
-  </div>`;
-}
-
-function showDTab(tab) {
-  ['D3','D4','D5','D6','D7','D8'].forEach(d => {
-    document.getElementById('dSection_'+d).style.display = d===tab ? 'block' : 'none';
-    document.getElementById('dtab_'+d).classList.toggle('active', d===tab);
-  });
-}
-
-async function submitNewNcr() {
-  const now = new Date();
-  const months = MONTHS;
-  const period = months[now.getMonth()]+'-'+String(now.getFullYear()).slice(2);
-  const data = {
-    'ReportType': document.getElementById('nf_type').value,
-    'ProductCategory': document.getElementById('nf_prodcat').value,
-    'IssuedBy': currentUser.Title,
-    'IssuedDate': now.toISOString().split('T')[0],
-    'ShiftTime': document.getElementById('nf_shift').value,
-    'CustomerName': document.getElementById('nf_customer').value,
-    'PartNo': document.getElementById('nf_partno').value,
-    'AffectedQty': document.getElementById('nf_affqty').value,
-    'SamplingQty': document.getElementById('nf_sampqty').value,
-    'IntlNCQty': document.getElementById('nf_intlqty').value,
-    'DetectionLocation': document.getElementById('nf_location').value,
-    'DetailNC': document.getElementById('nf_detail').value,
-    'NCCatagory': document.getElementById('nf_nccat').value,
-    'NCMode': document.getElementById('nf_ncmode').value,
-    'HowItDetected': document.getElementById('nf_howdetect').value,
-    'InterimAction': document.getElementById('nf_interim').value,
-    'SortingRepairReworkRequired': document.getElementById('nf_sorting').value,
-    'SortingReworkPIC': document.getElementById('nf_sortpic')?.value||'',
-    'StatusNC': 'Open',
-    'Period': period
-  };
-  if (!data.ProductCategory || !data.DetailNC || !data.NCCatagory) {
-    showToast('Please fill in Product Category, Detail NC and NC Category.', 'error'); return;
-  }
-  showToast('Submitting NCR...', 'success');
-  const res = await postToScript('appendNcr', data);
-  if (res.status === 'ok') {
-    showToast('NCR submitted successfully! ID: ' + res.rowNo, 'success');
-    await loadNcrData();
-    closeNcrDetailForm();
-  } else {
-    showToast('Failed: ' + res.message, 'error');
-  }
-}
-
-async function submitDiscipline(disc) {
-  const el = document.getElementById(disc.toLowerCase()+'_status');
-  el.textContent = 'Uploading...';
-  const fields = {};
-  if (disc==='D3') {
-    fields['InterimActBy'] = document.getElementById('d3_by').value;
-    fields['SortingReworkPIC'] = document.getElementById('d3_sortpic').value;
-    fields['TotalOK'] = document.getElementById('d3_qtyok').value;
-    fields['FinalRejectQty'] = document.getElementById('d3_qtyrej').value;
-    fields['TotalManHour'] = document.getElementById('d3_manhour').value;
-    fields['InterimActionDate'] = document.getElementById('d3_date').value;
-    fields['SortingRemark'] = document.getElementById('d3_remark').value;
-  } else if (disc==='D4') {
-    fields['RootCauseOcc'] = document.getElementById('d4_rcocc').value;
-    fields['RootCause(Escape)'] = document.getElementById('d4_rcskip').value;
-    fields['5M1E-Factor'] = document.getElementById('d4_factor').value;
-    fields['RC-AnalysisBy'] = document.getElementById('d4_by').value;
-    fields['RC-AnalysisDate'] = document.getElementById('d4_date').value;
-  } else if (disc==='D5') {
-    fields['CorrectiveActOccur'] = document.getElementById('d5_caocc').value;
-    fields['CorrectiveActSkip'] = document.getElementById('d5_caskip').value;
-    fields['CARemarks'] = document.getElementById('d5_remark').value;
-    fields['CABy'] = document.getElementById('d5_by').value;
-    fields['CADate'] = document.getElementById('d5_date').value;
-  } else if (disc==='D6') {
-    fields['ValidationRemark'] = document.getElementById('d6_remark').value;
-    fields['ValidationResult'] = document.getElementById('d6_result').value;
-    fields['ValidateCAPABy'] = document.getElementById('d6_by').value;
-    fields['ValidationCAPADate'] = document.getElementById('d6_date').value;
-  } else if (disc==='D7') {
-    fields['PA1'] = document.getElementById('d7_pa1').value;
-    fields['PA2'] = document.getElementById('d7_pa2').value;
-    fields['PARemark'] = document.getElementById('d7_remark').value;
-    fields['PABy'] = document.getElementById('d7_by').value;
-    fields['PADate'] = document.getElementById('d7_date').value;
-  } else if (disc==='D8') {
-    fields['CongratulationMsg'] = document.getElementById('d8_msg').value;
-    fields['StatusNC'] = document.getElementById('d8_result').value;
-    fields['ApprovedBy'] = document.getElementById('d8_approver').value;
-    fields['CloseDate'] = new Date().toISOString().split('T')[0];
-  }
-  fields['ID No.'] = currentNcrId;
-  const res = await postToScript('updateNcr', fields);
-  if (res.status === 'ok') {
-    el.className = 'upload-status ok'; el.textContent = 'Saved to Google Sheets';
-    showToast(disc + ' saved successfully!', 'success');
-    await loadNcrData();
-  } else {
-    el.className = 'upload-status err'; el.textContent = 'Failed: ' + res.message;
-    showToast('Failed to save ' + disc + ': ' + res.message, 'error');
-  }
-}
 
 // Close modals on overlay click
 document.querySelectorAll('.modal-overlay').forEach(el => {
