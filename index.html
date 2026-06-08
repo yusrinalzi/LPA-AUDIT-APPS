@@ -269,8 +269,8 @@
         <button class="layer-btn" data-layer="Layer 2" onclick="setLayerFilter('Layer 2')">Layer 2</button>
         <button class="layer-btn" data-layer="Layer 3" onclick="setLayerFilter('Layer 3')">Layer 3</button>
         <button class="layer-btn" data-layer="Layer 4" onclick="setLayerFilter('Layer 4')">Layer 4</button>
-        <button class="layer-btn" data-layer="USCAR 21" onclick="setLayerFilter('USCAR 21')">USCAR 21</button>
-        <button class="layer-btn" data-layer="USCAR 38" onclick="setLayerFilter('USCAR 38')">USCAR 38</button>
+	<button class="layer-btn" data-layer="USCAR 21" onclick="setLayerFilter('USCAR 21')">USCAR 21</button>
+	<button class="layer-btn" data-layer="USCAR 38" onclick="setLayerFilter('USCAR 38')">USCAR 38</button>
       </div>
     </div>
 
@@ -357,7 +357,7 @@ Close</button>
           <div class="field-val" id="fAuditor">—</div>
         </div>
         <div class="form-field">
-          <label>Audit Layer</label>
+          <label>Audit Layer/USCAR</label>
           <div class="field-val" id="fLayer">—</div>
         </div>
         <div class="form-field">
@@ -455,7 +455,7 @@ let chartNC = null, chartPlan = null;
 
 // ==================== GOOGLE SHEETS INTEGRATION via Apps Script ====================
 // Setelah deploy Apps Script, paste URL-nya di sini:
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx2V3rRfnBr70ISoHmQhpimpT9Qz2iBV7dl-MMOwMPO6KAkqmZ3yjA1DG_jsfXeUMmz/exec'; // Hardcoded — no setup needed
+const APPS_SCRIPT_URL = https://script.google.com/macros/s/AKfycbx2V3rRfnBr70ISoHmQhpimpT9Qz2iBV7dl-MMOwMPO6KAkqmZ3yjA1DG_jsfXeUMmz/exec'; // Hardcoded — no setup needed
 
 // ---- MAP ROWS dari Google Sheet (nama kolom asli) ke field pendek internal ----
 function mapAuditorRow(r) {
@@ -909,25 +909,30 @@ function setupAuditForm() {
   currentLayer = currentUser.Layer;
   // Populate dates for this auditor where status is Open
   const dateEl = document.getElementById('fDate');
-  dateEl.innerHTML = '<option value="">— Select available date —</option>';
+  dateEl.innerHTML = '<option value="">— Select available plan date —</option>';
   const openPlan = DB.auditPlan.filter(r => {
     const auditorMatch = (r.Auditor||'').toLowerCase() === currentUser.Title.toLowerCase();
     const isOpen = (r.StatusAudit||'').toLowerCase() === 'open';
     return auditorMatch && isOpen;
   });
+  
   if (openPlan.length === 0) {
     // Show all open for any auditor as fallback
     DB.auditPlan.filter(r => (r.StatusAudit||'').toLowerCase() === 'open').forEach((r, idx) => {
       const opt = document.createElement('option');
       opt.value = JSON.stringify(r);
-      opt.textContent = `${fmtDate(r.PlanAudit)} — ${r.Line} (${r.Auditor})`;
+      // TAMPILKAN LAYER JUGA
+      const layerName = r.Layer || '—';
+      opt.textContent = `${fmtDate(r.PlanAudit)} — ${r.Line} [${layerName}] (${r.Auditor})`;
       dateEl.appendChild(opt);
     });
   } else {
     openPlan.forEach(r => {
       const opt = document.createElement('option');
       opt.value = JSON.stringify(r);
-      opt.textContent = `${fmtDate(r.PlanAudit)} — ${r.Line}`;
+      // TAMPILKAN LAYER JUGA
+      const layerName = r.Layer || '—';
+      opt.textContent = `${fmtDate(r.PlanAudit)} — ${r.Line} [${layerName}]`;
       dateEl.appendChild(opt);
     });
   }
@@ -935,10 +940,25 @@ function setupAuditForm() {
 
 function onDateChange() {
   const val = document.getElementById('fDate').value;
-  if (!val) { currentPlanRow = null; document.getElementById('fLine').textContent = '—'; document.getElementById('questionsWrap').innerHTML = ''; document.getElementById('scoreFooter').style.display='none'; return; }
+  if (!val) { 
+    currentPlanRow = null; 
+    currentLine = '—';
+    currentLayer = '—';  // ← TAMBAHKAN
+    document.getElementById('fLine').textContent = '—'; 
+    document.getElementById('fLayer').textContent = '—';  // ← TAMBAHKAN
+    document.getElementById('questionsWrap').innerHTML = ''; 
+    document.getElementById('scoreFooter').style.display='none'; 
+    return; 
+  }
+  
   currentPlanRow = JSON.parse(val);
+  
   currentLine = currentPlanRow.Line || '—';
+  currentLayer = currentPlanRow.Layer || currentPlanRow.AuditLayer || '—';  // ← TAMBAHKAN
+  
   document.getElementById('fLine').textContent = currentLine;
+  document.getElementById('fLayer').textContent = currentLayer;  // ← TAMBAHKAN
+  
   renderQuestions();
 }
 
