@@ -719,15 +719,19 @@ function buildCharts() {
   const ncData = getFilteredNC();
   const planData = getFilteredPlan();
 
-  // Chart 1: NC Total vs Closed
+   // Chart 1: NC Total vs Closed - STACKED BAR CHART
   const ncByPeriod = {};
   ncData.forEach(r => {
     const d = parsePeriod(r.Period);
     if (!d) return;
     const k = fmtPeriod(d);
-    if (!ncByPeriod[k]) ncByPeriod[k] = {total:0, closed:0};
+    if (!ncByPeriod[k]) ncByPeriod[k] = { total: 0, closed: 0, open: 0 };
     ncByPeriod[k].total++;
-    if ((r.Status||'').toLowerCase() === 'closed') ncByPeriod[k].closed++;
+    if ((r.Status||'').toLowerCase() === 'closed') {
+      ncByPeriod[k].closed++;
+    } else {
+      ncByPeriod[k].open++;
+    }
   });
   const ncPeriods = sortPeriods(Object.keys(ncByPeriod));
 
@@ -738,27 +742,70 @@ function buildCharts() {
     data: {
       labels: ncPeriods,
       datasets: [
-        { label: 'Total NC', data: ncPeriods.map(p => ncByPeriod[p].total), backgroundColor: 'rgba(192,57,43,0.75)', borderColor: '#c0392b', borderWidth: 1 },
-        { label: 'Closed', data: ncPeriods.map(p => ncByPeriod[p].closed), backgroundColor: 'rgba(39,174,96,0.75)', borderColor: '#27ae60', borderWidth: 1 }
+                { 
+          label: 'NC Closed', 
+          data: ncPeriods.map(p => ncByPeriod[p].closed), 
+          backgroundColor: '#27ae60',
+          borderColor: '#1e8449',
+          borderWidth: 1,
+          stack: 'stack1'
+        },
+
+        { 
+          label: 'NC Open', 
+          data: ncPeriods.map(p => ncByPeriod[p].open), 
+          backgroundColor: '#e74c3c',
+          borderColor: '#c0392b',
+          borderWidth: 1,
+          stack: 'stack1'
+        }
       ]
     },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      onClick: (e, els) => { if (els.length > 0) showNCDetail(ncPeriods[els[0].index], ncData); },
-      plugins: { legend: { position: 'bottom' }, tooltip: { callbacks: { footer: () => 'Click to see the details' } } },
-      scales: { y: { beginAtZero: true } }
-    }
+  options: {
+        responsive: true, 
+        maintainAspectRatio: false,
+        onClick: (e, els) => { 
+          if (els.length > 0 && els[0].index !== undefined) {
+            showNCDetail(ncPeriods[els[0].index], ncData);
+          }
+        },
+        plugins: { 
+          legend: { position: 'bottom' }, 
+          tooltip: { 
+            callbacks: { 
+              footer: (tooltipItems) => {
+                const period = ncPeriods[tooltipItems[0].dataIndex];
+                const total = ncByPeriod[period].total;
+                return `Total NC: ${total}`;
+              }
+            }
+          }
+        },
+        scales: { 
+          y: { 
+            beginAtZero: true,
+            stacked: true
+          },
+          x: {
+            stacked: true
+          }
+        }
+      }
   });
 
-  // Chart 2: Plan vs Actual Done
+    // Chart 2: Audit Plan vs Actual - STACKED BAR CHART (Done vs Open)
   const planByPeriod = {};
   planData.forEach(r => {
     const d = parsePeriod(r.Period);
     if (!d) return;
     const k = fmtPeriod(d);
-    if (!planByPeriod[k]) planByPeriod[k] = {plan:0, done:0};
+    if (!planByPeriod[k]) planByPeriod[k] = { plan: 0, done: 0, open: 0 };
     planByPeriod[k].plan += (r.Plan || 1);
-    if ((r.StatusAudit||'').toLowerCase() === 'done') planByPeriod[k].done++;
+    if ((r.StatusAudit||'').toLowerCase() === 'done') {
+      planByPeriod[k].done++;
+    } else {
+      planByPeriod[k].open++;
+    }
   });
   const planPeriods = sortPeriods(Object.keys(planByPeriod));
 
@@ -769,18 +816,62 @@ function buildCharts() {
     data: {
       labels: planPeriods,
       datasets: [
-        { label: 'Planned', data: planPeriods.map(p => planByPeriod[p].plan), backgroundColor: 'rgba(2,69,60,0.65)', borderColor: '#02453c', borderWidth: 1 },
-        { label: 'Actual Done', data: planPeriods.map(p => planByPeriod[p].done), backgroundColor: 'rgba(4,160,134,0.75)', borderColor: '#04a086', borderWidth: 1 }
+        { 
+          label: 'Audit Done', 
+          data: planPeriods.map(p => planByPeriod[p].done), 
+          backgroundColor: '#27ae60',
+          borderColor: '#1e8449',
+          borderWidth: 1,
+          stack: 'stack1'
+        },
+        { 
+          label: 'Audit Open', 
+          data: planPeriods.map(p => planByPeriod[p].open), 
+          backgroundColor: '#e74c3c',
+          borderColor: '#c0392b',
+          borderWidth: 1,
+          stack: 'stack1'
+        }
+        
       ]
     },
     options: {
-      responsive: true, maintainAspectRatio: false,
-      onClick: (e, els) => { if (els.length > 0) showPlanDetail(planPeriods[els[0].index], planData); },
-      plugins: { legend: { position: 'bottom' }, tooltip: { callbacks: { footer: () => 'Click to see the details' } } },
-      scales: { y: { beginAtZero: true } }
+      responsive: true, 
+      maintainAspectRatio: false,
+      onClick: (event, activeElements) => {
+        if (activeElements && activeElements.length > 0) {
+          const dataIndex = activeElements[0].index;
+          if (dataIndex !== undefined && planPeriods[dataIndex]) {
+            showPlanDetail(planPeriods[dataIndex], planData);
+          }
+        }
+      },
+      plugins: { 
+        legend: { position: 'bottom' }, 
+        tooltip: { 
+          callbacks: { 
+            footer: (tooltipItems) => {
+              const period = planPeriods[tooltipItems[0].dataIndex];
+              const total = planByPeriod[period].plan;
+              return `📊 Total Plan: ${total} (Click for details)`;
+            }
+          }
+        }
+      },
+      scales: { 
+        y: { 
+          beginAtZero: true,
+          stacked: true,
+          title: { display: true, text: 'Number of Audits' }
+        },
+        x: {
+          stacked: true,
+          title: { display: true, text: 'Period' }
+        }
+      }
     }
   });
-
+  
   // Build pareto charts after main charts
   setTimeout(() => buildParetoCharts(), 100);
 }
