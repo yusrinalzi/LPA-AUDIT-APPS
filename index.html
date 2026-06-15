@@ -400,18 +400,32 @@ Close</button>
   <div id="sectionFollowup" class="page-content" style="display:none;">
     <div class="page-title">&#128270; Follow-up NC</div>
     <div class="filter-bar">
-      <label>Filter by Responsible Person:</label>
-      <select id="filterPIC" onchange="renderFollowup()"><option value="">All</option></select>
-      <label>Status:</label>
-      <select id="filterStatus" onchange="renderFollowup()">
-        <option value="Open">Open</option>
+      <label>Filter by Auditor:</label>
+      <select id="filterAuditor" onchange="renderFollowup()">
         <option value="">All</option>
+      </select>
+      <label>Filter by Responsible Person:</label>
+      <select id="filterPIC" onchange="renderFollowup()">
+        <option value="">All</option>
+      </select>
+      <label>Filter by Layer:</label>
+      <select id="filterLayer" onchange="renderFollowup()">
+        <option value="">All</option>
+        <option value="Layer 1">Layer 1</option>
+        <option value="Layer 2">Layer 2</option>
+        <option value="Layer 3">Layer 3</option>
+        <option value="Layer 4">Layer 4</option>
+      </select>
+      <label>Filter by Status:</label>
+      <select id="filterStatus" onchange="renderFollowup()">
+        <option value="">All</option>
+        <option value="Open">Open</option>
         <option value="Closed">Closed</option>
       </select>
+      <button onclick="resetFollowupFilters()" style="padding:6px 12px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;font-size:12px;cursor:pointer;">&#10006; Reset Filter</button>
     </div>
     <div id="followupList"></div>
   </div>
-</div>
 
 <!-- Detail panels moved inline below charts -->
 </div>
@@ -1270,6 +1284,7 @@ function submitAuditForm() {
 
 // ==================== FOLLOW-UP NC ====================
 function populateFilters() {
+  // Populate PIC filter
   const picEl = document.getElementById('filterPIC');
   const pics = [...new Set(DB.summaryNC.map(r => r.ResPerson || '').filter(Boolean))].sort();
   pics.forEach(p => {
@@ -1277,22 +1292,54 @@ function populateFilters() {
     opt.value = p; opt.textContent = p;
     picEl.appendChild(opt);
   });
+  
+  // Populate Auditor filter
+  const auditorEl = document.getElementById('filterAuditor');
+  const auditors = [...new Set(DB.summaryNC.map(r => r.Auditor || '').filter(Boolean))].sort();
+  auditors.forEach(a => {
+    const opt = document.createElement('option');
+    opt.value = a; opt.textContent = a;
+    auditorEl.appendChild(opt);
+  });
+  
+  // Populate Layer filter (sudah manual di HTML, tapi kita isi dari data untuk dinamis)
+  const layerEl = document.getElementById('filterLayer');
+  const layers = [...new Set(DB.summaryNC.map(r => r.Layer || '').filter(Boolean))].sort();
+  if (layers.length > 0) {
+    layerEl.innerHTML = '<option value="">All</option>';
+    layers.forEach(l => {
+      const opt = document.createElement('option');
+      opt.value = l; opt.textContent = l;
+      layerEl.appendChild(opt);
+    });
+  }
 }
 
 function renderFollowup() {
+  const auditorFilter = document.getElementById('filterAuditor').value;
   const picFilter = document.getElementById('filterPIC').value;
+  const layerFilter = document.getElementById('filterLayer').value;
   const statusFilter = document.getElementById('filterStatus').value;
+  
   let rows = DB.summaryNC.filter(r => {
     const status = r.Status || '';
+    const auditor = r.Auditor || '';
+    const pic = r.ResPerson || '';
+    const layer = r.Layer || '';
+    
     if (statusFilter && status !== statusFilter) return false;
-    if (picFilter && (r.ResPerson||'') !== picFilter) return false;
+    if (auditorFilter && auditor !== auditorFilter) return false;
+    if (picFilter && pic !== picFilter) return false;
+    if (layerFilter && layer !== layerFilter) return false;
     return true;
   });
   
-  const auditorNames = DB.auditors.map(a => a.Title);
   const container = document.getElementById('followupList');
   
-  if (rows.length === 0) { container.innerHTML = '<p style="color:var(--text-light);padding:20px;">No NC items found.</p>'; return; }
+  if (rows.length === 0) { 
+    container.innerHTML = '<p style="color:var(--text-light);padding:20px;text-align:center;">🔍 No NC items found with the selected filters.</p>'; 
+    return; 
+  }
   
   container.innerHTML = rows.map((r, i) => {
     const status = r.Status || 'Open';
@@ -1377,7 +1424,6 @@ function renderFollowup() {
       </div>` : ''}
     </div>`;
   }).join('');
-
 }
 
 function saveNCFollowup(i, no) {
@@ -1420,6 +1466,14 @@ function saveNCFollowup(i, no) {
   }
 }
 
+function resetFollowupFilters() {
+  document.getElementById('filterAuditor').value = '';
+  document.getElementById('filterPIC').value = '';
+  document.getElementById('filterLayer').value = '';
+  document.getElementById('filterStatus').value = '';
+  renderFollowup();
+}
+  
 function notifyPIC(pic, auditor, issueDate, desc, line) {
   const picData = DB.auditors.find(a => a.Title === pic);
   const emailBody = `Hi, ${pic}.\n\nAn NC from Layer Process Audit has been issued by ${auditor} on ${issueDate}. The details of NC is: ${desc}, captured at ${line}.\n\nYou or your subordinate are assigned to close the NC. Please contact QA/QC team for more detail of the NC.\n\nThank you for your action(s).\n\nRegards,\nLPA Teams`;
@@ -1622,6 +1676,8 @@ document.getElementById('paretoOverlay').addEventListener('click', function(e) {
 document.querySelectorAll('.modal-overlay').forEach(el => {
   el.addEventListener('click', e => { if (e.target === el) el.classList.remove('active'); });
 });
+
+  
 </script>
 </body>
 </html>
