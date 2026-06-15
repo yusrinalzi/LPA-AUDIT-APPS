@@ -664,22 +664,48 @@ function buildKPICards() {
   const nc = getFilteredNC();
   const plan = getFilteredPlan();
 
+  // Data untuk Card
   const totalNC = nc.length;
   const closedNC = nc.filter(r => (r.Status||'').toLowerCase() === 'closed').length;
   const pctNC = totalNC > 0 ? Math.round((closedNC/totalNC)*100) : 0;
+
   const totalPlan = plan.length;
   const donePlan = plan.filter(r => (r.StatusAudit||'').toLowerCase() === 'done').length;
   const pctDone = totalPlan > 0 ? Math.round((donePlan/totalPlan)*100) : 0;
 
+  // Definisi 4 KPI Card - format baru: "156 (87%)"
   const kpis = [
-    { val: totalNC, lbl: 'Total NC', sub: activeLayer === 'All' ? 'All Layers' : activeLayer, color: '#c0392b', bg: '#fdf1f0' },
-    { val: closedNC, lbl: 'NC Closed', sub: `from ${totalNC} NC`, color: '#27ae60', bg: '#f1fdf5' },
-    { val: pctNC + '%', lbl: '% NC Closed', sub: pctNC >= 80 ? '✅ Good' : pctNC >= 50 ? '⚠️ Fair' : '🔴 Needs attention', color: pctNC >= 80 ? '#27ae60' : pctNC >= 50 ? '#f39c12' : '#c0392b', bg: '#f9f9f9' },
-    { val: totalPlan, lbl: 'Total Audit Plan', sub: activeLayer === 'All' ? 'All Layers' : activeLayer, color: '#02453c', bg: '#f0f5f4' },
-    { val: donePlan, lbl: 'Audit Done', sub: `from ${totalPlan} plan`, color: '#04a086', bg: '#f0faf8' },
-    { val: pctDone + '%', lbl: '% Audit Done', sub: pctDone >= 80 ? '✅ On Track' : pctDone >= 50 ? '⚠️ Fair' : '🔴 Behind', color: pctDone >= 80 ? '#27ae60' : pctDone >= 50 ? '#f39c12' : '#c0392b', bg: '#f9f9f9' },
+    { 
+      val: totalNC, 
+      lbl: 'TOTAL NC', 
+      sub: activeLayer === 'All' ? 'All Layers' : activeLayer, 
+      color: '#c0392b', 
+      bg: '#fdf1f0' 
+    },
+    { 
+      val: `${closedNC} (${pctNC}%)`,  // <-- Format: "156 (87%)"
+      lbl: 'NC CLOSE', 
+      sub: activeLayer === 'All' ? 'All Layers' : activeLayer,
+      color: '#27ae60', 
+      bg: '#f1fdf5' 
+    },
+    { 
+      val: totalPlan, 
+      lbl: 'TOTAL AUDIT PLAN', 
+      sub: activeLayer === 'All' ? 'All Layers' : activeLayer, 
+      color: '#02453c', 
+      bg: '#f0f5f4' 
+    },
+    { 
+      val: `${donePlan} (${pctDone}%)`, // <-- Format: "103 (32%)"
+      lbl: 'AUDIT DONE', 
+      sub: activeLayer === 'All' ? 'All Layers' : activeLayer,
+      color: '#04a086', 
+      bg: '#f0faf8' 
+    },
   ];
 
+  // Generate HTML untuk cards
   document.getElementById('kpiCards').innerHTML = kpis.map(k => `
     <div class="kpi-card" style="border-top-color:${k.color};background:${k.bg};">
       <div class="kpi-val" style="color:${k.color};">${k.val}</div>
@@ -687,7 +713,7 @@ function buildKPICards() {
       <div class="kpi-sub">${k.sub}</div>
     </div>`).join('');
 }
-
+  
 function buildCharts() {
   buildKPICards();
   const ncData = getFilteredNC();
