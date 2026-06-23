@@ -355,7 +355,7 @@ Close</button>
           <div class="field-val" id="fAuditor">—</div>
         </div>
         <div class="form-field">
-          <label>Audit Layer/USCAR</label>
+          <label>Audit Layer</label>
           <div class="field-val" id="fLayer">—</div>
         </div>
         <div class="form-field">
@@ -389,7 +389,7 @@ Close</button>
         <div class="score-box applicable"><div class="val" id="sApplicable">0</div><div class="lbl">Applicable</div></div>
         <div class="score-box na"><div class="val" id="sNA">0</div><div class="lbl">Not Applicable</div></div>
         <div class="score-box ok"><div class="val" id="sOK" style="color:var(--success)">0</div><div class="lbl">Total OK</div></div>
-        <div class="score-box nc"><div class="val" id="sNC" style="color:var(--danger)">0</div><div class="lbl">Total NC</div></div>
+        <div class="score-box nc"><div class="val" id="sNC" style="color:var(--danger)">0</div><div class="lbl">Total Not OK</div></div>
         <div class="score-box score"><div class="val" id="sScore">0%</div><div class="lbl">Score</div></div>
       </div>
       <button class="btn-submit" onclick="submitAuditForm()">&#128228; Submit Report</button>
@@ -1213,7 +1213,7 @@ function renderQuestions() {
       </div>
       <div class="q-actions">
         <label class="q-check"><input type="checkbox" id="ok_${i}" onchange="toggleQ(${i},'ok')"><span class="q-check-label ok-label">✓ OK</span></label>
-        <label class="q-check"><input type="checkbox" id="nc_${i}" onchange="toggleQ(${i},'nc')"><span class="q-check-label nc-label">✗ NC</span></label>
+        <label class="q-check"><input type="checkbox" id="nc_${i}" onchange="toggleQ(${i},'nc')"><span class="q-check-label nc-label">✗ Not OK</span></label>
       </div>
       <div class="nc-details" id="ncd_${i}">
         <select id="ncMode_${i}" onchange="questionStates[${i}].mode=this.value">
