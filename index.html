@@ -560,7 +560,7 @@ let chartNC = null, chartPlan = null;
 
 // ==================== GOOGLE SHEETS INTEGRATION via Apps Script ====================
 // Setelah deploy Apps Script, paste URL-nya di sini:
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwwtVT89tjqjNnBZV_tR3hRX_RgLyYckOlHtZoybuZ_l3KIKGG-KtN66YzlJweUW36C/exec'; // Hardcoded — no setup needed
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwWYESbS5rJFtVl3pUmTX2e_40Hcz5nUySHxrwOdttL2F9kYRM46A2FwQM5Pmp3dAk/exec'; // Hardcoded — no setup needed
 
 // ---- MAP ROWS dari Google Sheet (nama kolom asli) ke field pendek internal ----
 function mapAuditorRow(r) {
@@ -1349,7 +1349,6 @@ function toggleQ(i, type) {
   ncd.className = 'nc-details' + (ncCb.checked ? ' show' : '');
   updateScore();
 }
-
 async function handleImg(event, i) {
     const file = event.target.files[0];
     if (!file) return;
@@ -1387,15 +1386,16 @@ async function handleImg(event, i) {
     };
     reader.readAsDataURL(file);
 
-    // Upload ke GitHub
+    // Upload ke GitHub via Apps Script (AMAN!)
     try {
         const result = await uploadImageToGitHub(file);
         const statusEl = document.getElementById(`uploadStatus_${i}`);
         
         if (result.success) {
-            questionStates[i].githubUrl = result.url;    // <-- SIMPAN LINK
-            questionStates[i].githubPath = result.path;  // <-- SIMPAN PATH
-            questionStates[i].picSrc = result.url;       // <-- GANTI dengan link
+            questionStates[i].githubUrl = result.url;
+            questionStates[i].githubPath = result.path || '';
+            questionStates[i].picSrc = result.url;
+            
             statusEl.textContent = '✅ Uploaded to GitHub';
             statusEl.style.color = 'var(--success)';
             showToast(`✅ Image ${file.name} uploaded to GitHub`, 'success');
@@ -1413,8 +1413,6 @@ async function handleImg(event, i) {
             statusEl.textContent = `❌ Upload failed: ${result.error}`;
             statusEl.style.color = 'var(--danger)';
             showToast(`❌ Failed to upload ${file.name}`, 'error');
-            // Tetap simpan base64 sebagai fallback
-            questionStates[i].githubUrl = questionStates[i].picSrc;
         }
     } catch (error) {
         const statusEl = document.getElementById(`uploadStatus_${i}`);
@@ -2074,17 +2072,16 @@ function readFileAsBase64(file) {
 // ============================================================
 
 // ============================================================
-// UPLOAD GAMBAR VIA APPS SCRIPT (Token Aman, Tidak ke Frontend)
+// UPLOAD GAMBAR VIA APPS SCRIPT (AMAN! Token di Server)
 // ============================================================
 
 async function uploadImageToGitHub(file, folder = 'Images') {
     try {
-        // Baca file sebagai base64
         const base64Content = await readFileAsBase64(file);
         
         console.log('📤 Uploading via Apps Script...');
+        console.log('📤 File:', file.name);
         
-        // Kirim ke Apps Script (bukan langsung ke GitHub!)
         const response = await fetch(APPS_SCRIPT_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'text/plain' },
@@ -2099,6 +2096,7 @@ async function uploadImageToGitHub(file, folder = 'Images') {
         });
         
         const result = await response.json();
+        console.log('📥 Response:', result);
         
         if (result.success) {
             console.log('✅ Upload success:', result.url);
@@ -2111,8 +2109,7 @@ async function uploadImageToGitHub(file, folder = 'Images') {
         console.error('❌ Upload error:', error.message);
         return { success: false, error: error.message };
     }
-}
-
+} 
   
 // ==================== IMAGE MODAL ====================
 function closeImageModal() {
