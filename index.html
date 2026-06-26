@@ -2073,45 +2073,38 @@ function readFileAsBase64(file) {
 // FUNGSI UPLOAD KE GITHUB (HANYA SATU!)
 // ============================================================
 
+// ============================================================
+// UPLOAD GAMBAR VIA APPS SCRIPT (Token Aman, Tidak ke Frontend)
+// ============================================================
+
 async function uploadImageToGitHub(file, folder = 'Images') {
     try {
-        // Ambil token dari Apps Script (AMAN!)
-        const config = await getGitHubConfig();
-        
-        if (!config || !config.token) {
-            throw new Error('GitHub token not found. Check sheet Config.');
-        }
-        
+        // Baca file sebagai base64
         const base64Content = await readFileAsBase64(file);
         
-        const timestamp = Date.now();
-        const cleanName = file.name.replace(/[^a-zA-Z0-9.]/g, '_');
-        const path = `${folder}/${timestamp}_${cleanName}`;
+        console.log('📤 Uploading via Apps Script...');
         
-        console.log(`📤 Uploading: ${file.name} to ${config.owner}/${config.repo}`);
-        
-        const response = await fetch(`https://api.github.com/repos/${config.owner}/${config.repo}/contents/${path}`, {
-            method: 'PUT',
-            headers: {
-                'Authorization': `token ${config.token}`,
-                'Content-Type': 'application/json',
-                'Accept': 'application/vnd.github.v3+json'
-            },
+        // Kirim ke Apps Script (bukan langsung ke GitHub!)
+        const response = await fetch(APPS_SCRIPT_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain' },
             body: JSON.stringify({
-                message: `Upload image: ${file.name}`,
-                content: base64Content,
-                branch: config.branch
+                action: 'uploadImage',
+                data: {
+                    image: base64Content,
+                    filename: file.name,
+                    folder: folder
+                }
             })
         });
         
-        if (response.status === 201 || response.status === 200) {
-            const data = await response.json();
-            const rawUrl = `https://raw.githubusercontent.com/${config.owner}/${config.repo}/${config.branch}/${path}`;
-            console.log(`✅ Upload success: ${rawUrl}`);
-            return { success: true, url: rawUrl, path: path };
+        const result = await response.json();
+        
+        if (result.success) {
+            console.log('✅ Upload success:', result.url);
+            return { success: true, url: result.url };
         } else {
-            const error = await response.json();
-            throw new Error(error.message || 'Upload failed');
+            throw new Error(result.error || 'Upload failed');
         }
         
     } catch (error) {
@@ -2119,6 +2112,7 @@ async function uploadImageToGitHub(file, folder = 'Images') {
         return { success: false, error: error.message };
     }
 }
+
   
 // ==================== IMAGE MODAL ====================
 function closeImageModal() {
