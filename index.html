@@ -560,7 +560,7 @@ let chartNC = null, chartPlan = null;
 
 // ==================== GOOGLE SHEETS INTEGRATION via Apps Script ====================
 // Setelah deploy Apps Script, paste URL-nya di sini:
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyhPag1bc2sYg7A_uzNZTdHFFBhBNRHTBjCTt3qk5EdZDKepT7KhaqzzHoevvLBfFMb/exec'; // Hardcoded — no setup needed
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwlj48cxRNvBdQSZdQjuzlC5gCOaG2Rf-wOjIFGlNz5h9_I2SOFRN_5bbKvV6G2iMfw/exec'; // Hardcoded — no setup needed
 
 // ---- MAP ROWS dari Google Sheet (nama kolom asli) ke field pendek internal ----
 function mapAuditorRow(r) {
@@ -2050,12 +2050,6 @@ document.querySelectorAll('.modal-overlay').forEach(el => {
 });
 
 
-// ==================== KONFIGURASI GITHUB ====================
-const GITHUB_CONFIG = {
-    token: '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', // Ganti dengan token Anda
-    repo: 'yusrinalzi/LPA-AUDIT-APPS', // Format: username/repo (lihat dari screenshot)
-    branch: 'main' // Dari screenshot terlihat branch 'main'
-};  
 // ==================== FUNGSI UPLOAD KE GITHUB ====================
 
 // Fungsi untuk membaca file sebagai base64
@@ -2075,92 +2069,57 @@ function readFileAsBase64(file) {
 }
 
 // Fungsi upload ke GitHub
+// ============================================================
+// FUNGSI UPLOAD KE GITHUB (HANYA SATU!)
+// ============================================================
+
 async function uploadImageToGitHub(file, folder = 'Images') {
     try {
-        // Baca file sebagai base64
+        // Ambil token dari Apps Script (AMAN!)
+        const config = await getGitHubConfig();
+        
+        if (!config || !config.token) {
+            throw new Error('GitHub token not found. Check sheet Config.');
+        }
+        
         const base64Content = await readFileAsBase64(file);
         
-        // Generate nama file unik
         const timestamp = Date.now();
         const cleanName = file.name.replace(/[^a-zA-Z0-9.]/g, '_');
         const path = `${folder}/${timestamp}_${cleanName}`;
-
-        console.log('Uploading to GitHub:', path);
-
-        // Upload ke GitHub
-        const response = await fetch(`https://api.github.com/repos/${GITHUB_CONFIG.repo}/contents/${path}`, {
+        
+        console.log(`📤 Uploading: ${file.name} to ${config.owner}/${config.repo}`);
+        
+        const response = await fetch(`https://api.github.com/repos/${config.owner}/${config.repo}/contents/${path}`, {
             method: 'PUT',
             headers: {
-                'Authorization': `token ${GITHUB_CONFIG.token}`,
+                'Authorization': `token ${config.token}`,
                 'Content-Type': 'application/json',
                 'Accept': 'application/vnd.github.v3+json'
             },
             body: JSON.stringify({
                 message: `Upload image: ${file.name}`,
                 content: base64Content,
-                branch: GITHUB_CONFIG.branch
+                branch: config.branch
             })
         });
-
-        console.log('GitHub Response Status:', response.status);
-
+        
         if (response.status === 201 || response.status === 200) {
             const data = await response.json();
-            const rawUrl = `https://raw.githubusercontent.com/${GITHUB_CONFIG.repo}/${GITHUB_CONFIG.branch}/${path}`;
-            console.log('Upload success:', rawUrl);
+            const rawUrl = `https://raw.githubusercontent.com/${config.owner}/${config.repo}/${config.branch}/${path}`;
+            console.log(`✅ Upload success: ${rawUrl}`);
             return { success: true, url: rawUrl, path: path };
         } else {
             const error = await response.json();
-            console.error('GitHub Error:', error);
             throw new Error(error.message || 'Upload failed');
         }
+        
     } catch (error) {
-        console.error('Error uploading to GitHub:', error);
+        console.error('❌ Upload error:', error.message);
         return { success: false, error: error.message };
     }
 }
-
   
-// ==================== FUNGSI UPLOAD KE GITHUB ====================
-async function uploadImageToGitHub(file, folder = 'Images') { // Ubah dari 'images' menjadi 'Images'
-    try {
-        // Baca file sebagai base64
-        const base64Content = await readFileAsBase64(file);
-        
-        // Generate nama file unik
-        const timestamp = Date.now();
-        const cleanName = file.name.replace(/[^a-zA-Z0-9.]/g, '_');
-        const path = `${folder}/${timestamp}_${cleanName}`;
-
-        // Upload ke GitHub
-        const response = await fetch(`https://api.github.com/repos/${GITHUB_CONFIG.repo}/contents/${path}`, {
-            method: 'PUT',
-            headers: {
-                'Authorization': `token ${GITHUB_CONFIG.token}`,
-                'Content-Type': 'application/json',
-                'Accept': 'application/vnd.github.v3+json'
-            },
-            body: JSON.stringify({
-                message: `Upload image: ${file.name}`,
-                content: base64Content,
-                branch: GITHUB_CONFIG.branch
-            })
-        });
-
-        if (response.status === 201 || response.status === 200) {
-            const data = await response.json();
-            // URL akan menjadi: https://raw.githubusercontent.com/username/repo/branch/Images/nama_file.jpg
-            const rawUrl = `https://raw.githubusercontent.com/${GITHUB_CONFIG.repo}/${GITHUB_CONFIG.branch}/${path}`;
-            return { success: true, url: rawUrl, path: path };
-        } else {
-            const error = await response.json();
-            throw new Error(error.message || 'Upload failed');
-        }
-    } catch (error) {
-        console.error('Error uploading to GitHub:', error);
-        return { success: false, error: error.message };
-    }
-}
 // ==================== IMAGE MODAL ====================
 function closeImageModal() {
     const modal = document.getElementById('imageModal');
@@ -2354,7 +2313,57 @@ function openImageNewTab() {
         window.open(imageUrl, '_blank');
     }
 }
+// ============================================================
+// KONFIGURASI - AMBIL TOKEN VIA APPS SCRIPT
+// ============================================================
 
+
+let cachedConfig = null;
+let configCacheTime = 0;
+const CACHE_DURATION = 5 * 60 * 1000; // 5 menit
+
+async function getGitHubConfig() {
+    // Cek cache
+    const now = Date.now();
+    if (cachedConfig && (now - configCacheTime) < CACHE_DURATION) {
+        console.log('📦 Menggunakan config dari cache');
+        return cachedConfig;
+    }
+    
+    try {
+        console.log('📥 Mengambil config dari Apps Script...');
+        
+        const response = await fetch(`${APPS_SCRIPT_URL}?action=getConfig`);
+        const result = await response.json();
+        
+        if (result.status === 'error') {
+            throw new Error(result.message);
+        }
+        
+        if (!result.data || !result.data.token) {
+            throw new Error('Token tidak ditemukan di sheet Config');
+        }
+        
+        console.log('✅ Config berhasil diambil');
+        console.log(`   Owner: ${result.data.owner}`);
+        console.log(`   Repo: ${result.data.repo}`);
+        console.log(`   Token: ${result.data.token.substring(0, 15)}...`);
+        
+        cachedConfig = {
+            token: result.data.token,
+            owner: result.data.owner || 'yusrinalizi',
+            repo: result.data.repo || 'LPA-AUDIT-APPS',
+            branch: result.data.branch || 'main'
+        };
+        configCacheTime = now;
+        
+        return cachedConfig;
+        
+    } catch (error) {
+        console.error('❌ Gagal mengambil config:', error);
+        return null;
+    }
+}
   
 </script>
 </body>
