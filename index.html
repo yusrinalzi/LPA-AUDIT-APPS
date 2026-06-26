@@ -466,8 +466,9 @@ let isGuest = false;
 let currentLayer = null;
 let currentLine = null;
 let currentPlanRow = null;
-let questionStates = {}; // index -> {ok, nc, mode, pic, desc, picName}
+let questionStates = {}; // index -> {ok, nc, mode, pic, desc, picName, picSrc, githubUrl, githubPath}
 let chartNC = null, chartPlan = null;
+  
 
 // ==================== GOOGLE SHEETS INTEGRATION via Apps Script ====================
 // Setelah deploy Apps Script, paste URL-nya di sini:
@@ -1196,8 +1197,20 @@ function renderQuestions() {
     document.getElementById('questionsWrap').innerHTML = '<p style="color:var(--text-light);padding:20px;">No questions found for this layer. Please ensure data is loaded.</p>';
     return;
   }
-  questionStates = {};
-  questions.forEach((q, i) => { questionStates[i] = {ok:false, nc:false, mode:'', pic:null, picName:'', desc:'', picSrc:''}; });
+questionStates = {};
+questions.forEach((q, i) => { 
+    questionStates[i] = {
+        ok: false, 
+        nc: false, 
+        mode: '', 
+        pic: null, 
+        picName: '', 
+        desc: '', 
+        picSrc: '',
+        githubUrl: '',  // <-- TAMBAHKAN INI
+        githubPath: ''  // <-- TAMBAHKAN INI
+    }; 
+});
   
   const auditorNames = DB.auditors.map(a => a.Title);
   let html = '';
@@ -1249,19 +1262,82 @@ function toggleQ(i, type) {
   updateScore();
 }
 
-function handleImg(event, i) {
-  const file = event.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    questionStates[i].picSrc = e.target.result;
-    questionStates[i].picName = file.name;
-    const img = document.getElementById(`imgPrev_${i}`);
-    img.src = e.target.result; img.style.display = 'block';
-  };
-  reader.readAsDataURL(file);
-}
+async function handleImg(event, i) {
+    const file = event.target.files[0];
+    if (!file) return;
 
+    // Validasi tipe file
+    if (!file.type.startsWith('image/')) {
+        showToast('Hanya file gambar yang diperbolehkan!', 'error');
+        return;
+    }
+
+    // Validasi ukuran file (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+        showToast('Ukuran file maksimal 5MB!', 'error');
+        return;
+    }
+
+    // Tampilkan preview dulu
+    const reader = new FileReader();
+    reader.onload = e => {
+        questionStates[i].picSrc = e.target.result;
+        questionStates[i].picName = file.name;
+        const img = document.getElementById(`imgPrev_${i}`);
+        img.src = e.target.result;
+        img.style.display = 'block';
+        
+        // Tambahkan status upload
+        const statusEl = document.createElement('span');
+        statusEl.className = 'upload-status';
+        statusEl.id = `uploadStatus_${i}`;
+        statusEl.textContent = '⏳ Uploading to GitHub...';
+        const parentDiv = img.parentElement;
+        const existingStatus = document.getElementById(`uploadStatus_${i}`);
+        if (existingStatus) existingStatus.remove();
+        parentDiv.appendChild(statusEl);
+    };
+    reader.readAsDataURL(file);
+
+    // Upload ke GitHub
+    try {
+        const result = await uploadImageToGitHub(file);
+        const statusEl = document.getElementById(`uploadStatus_${i}`);
+        
+        if (result.success) {
+            questionStates[i].githubUrl = result.url;    // <-- SIMPAN LINK
+            questionStates[i].githubPath = result.path;  // <-- SIMPAN PATH
+            questionStates[i].picSrc = result.url;       // <-- GANTI dengan link
+            statusEl.textContent = '✅ Uploaded to GitHub';
+            statusEl.style.color = 'var(--success)';
+            showToast(`✅ Image ${file.name} uploaded to GitHub`, 'success');
+            
+            // Tambahkan link untuk melihat file
+            const linkEl = document.createElement('a');
+            linkEl.href = result.url;
+            linkEl.target = '_blank';
+            linkEl.textContent = '🔗 View';
+            linkEl.style.marginLeft = '8px';
+            linkEl.style.fontSize = '12px';
+            linkEl.style.color = 'var(--primary)';
+            statusEl.appendChild(linkEl);
+        } else {
+            statusEl.textContent = `❌ Upload failed: ${result.error}`;
+            statusEl.style.color = 'var(--danger)';
+            showToast(`❌ Failed to upload ${file.name}`, 'error');
+            // Tetap simpan base64 sebagai fallback
+            questionStates[i].githubUrl = questionStates[i].picSrc;
+        }
+    } catch (error) {
+        const statusEl = document.getElementById(`uploadStatus_${i}`);
+        if (statusEl) {
+            statusEl.textContent = '❌ Upload failed';
+            statusEl.style.color = 'var(--danger)';
+        }
+        showToast(`❌ Error uploading image: ${error.message}`, 'error');
+    }
+}
+  
 function updateScore() {
   const vals = Object.values(questionStates);
   const totalQ = vals.length;
@@ -1278,102 +1354,169 @@ function updateScore() {
 }
 
 function submitAuditForm() {
-  if (!currentPlanRow) { showToast('Please select an audit date first.', 'error'); return; }
-  const vals = Object.values(questionStates);
-  const totalOK = vals.filter(v => v.ok).length;
-  const totalNC = vals.filter(v => v.nc).length;
-  const totalNA = vals.filter(v => !v.ok && !v.nc).length;
-  const applicable = totalOK + totalNC;
-  const score = applicable > 0 ? ((totalOK / applicable) * 100).toFixed(2) : 0;
-  const auditee = document.getElementById('fAuditee').value;
-  const partNo = document.getElementById('fPartNo').value;
-  const now = new Date();
-  const dateStr = fmtDate(now.toISOString());
-  const monthStr = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][now.getMonth()] + '-' + String(now.getFullYear()).slice(2);
-  
-  // Build NC rows for SummaryLPAReport
-  const ncItems = [];
-  const questions = DB.auditQuestions.filter(q => (q.Layer||'') === currentLayer);
-  let nextNo = DB.summaryNC.length + 1;
-  Object.entries(questionStates).forEach(([idx, state]) => {
-    if (!state.nc) return;
-    const q = questions[idx];
-    const severity = SEVERITY_MAP[state.mode] || 'OFI';
-    const target = new Date(now); target.setDate(target.getDate() + 14);
-    ncItems.push({
-      No: nextNo++,
-      Line: currentLine,
-      Layer: currentLayer,
-      Clause: q.Clause || '',
-      Period: monthStr,
-      FindingDesc: state.desc,
-      NCPicture: state.picSrc ? '[image attached]' : '',
-      FindingMode: state.mode,
-      Severity: severity,
-      Auditor: currentUser.Title,
-      IssueDate: dateStr,
-      ResPerson: state.pic || '',
-      TargetDate: fmtDate(target.toISOString()),
-      Status: 'Open',
-      ImmCtrl: '',
-      RootCause: '',
-      CA: '',
-      VerResult: '',
-      VerBy: '',
-      VerDate: '',
-      SimilarNC: '',
-      RepFinding: ''
-    });
-  });
-  
-  // Tambah ke local DB (langsung tampil)
-  DB.summaryNC.push(...ncItems);
-  
-  // Update AuditPlanActual di local DB
-  const planIdx = DB.auditPlan.findIndex(r =>
-    r.PlanAudit === currentPlanRow.PlanAudit && r.Line === currentPlanRow.Line && r.Auditor === currentPlanRow.Auditor
-  );
-  const planUpdate = { ActualAudit: now.toISOString().split('T')[0], TotalNCs: totalNC, StatusAudit: 'Done', Auditee: auditee, PartNo: partNo, TotalApplicable: applicable, TotalNotApplicable: totalNA, TotalComformity: totalOK, OverallScore: score };
-  if (planIdx >= 0) Object.assign(DB.auditPlan[planIdx], planUpdate);
+    if (!currentPlanRow) { 
+        showToast('Please select an audit date first.', 'error'); 
+        return; 
+    }
+    
+    const vals = Object.values(questionStates);
+    const totalOK = vals.filter(v => v.ok).length;
+    const totalNC = vals.filter(v => v.nc).length;
+    const totalNA = vals.filter(v => !v.ok && !v.nc).length;
+    const applicable = totalOK + totalNC;
+    const score = applicable > 0 ? ((totalOK / applicable) * 100).toFixed(2) : 0;
+    const auditee = document.getElementById('fAuditee').value;
+    const partNo = document.getElementById('fPartNo').value;
+    const now = new Date();
+    const dateStr = fmtDate(now.toISOString());
+    const monthStr = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][now.getMonth()] + '-' + String(now.getFullYear()).slice(2);
+    
+    // Build NC rows for SummaryLPAReport
+    const ncItems = [];
+    const questions = DB.auditQuestions.filter(q => (q.Layer||'') === currentLayer);
+    let nextNo = DB.summaryNC.length + 1;
+    
+    Object.entries(questionStates).forEach(([idx, state]) => {
+        if (!state.nc) return;
+        const q = questions[idx];
+        const severity = SEVERITY_MAP[state.mode] || 'OFI';
+        const target = new Date(now); 
+        target.setDate(target.getDate() + 14);
+        
+        // Pilih URL GitHub jika ada, fallback ke base64
+        let imageValue = '';
+        if (state.githubUrl) {
+            imageValue = state.githubUrl;  // PRIORITAS: URL GitHub
+        } else if (state.picSrc && state.picSrc.startsWith('data:image/')) {
+            imageValue = state.picSrc;     // FALLBACK: base64
+        } else {
+            imageValue = '';               // TIDAK ADA GAMBAR
+        }
 
-  buildCharts();
-  renderFollowup();
+        ncItems.push({
+            No: nextNo++,
+            Line: currentLine,
+            Layer: currentLayer,
+            Clause: q.Clause || '',
+            Period: monthStr,
+            FindingDesc: state.desc,
+            NCPicture: imageValue,         // SIMPAN URL GITHUB ATAU BASE64
+            FindingMode: state.mode,
+            Severity: severity,
+            Auditor: currentUser.Title,
+            IssueDate: dateStr,
+            ResPerson: state.pic || '',
+            TargetDate: fmtDate(target.toISOString()),
+            Status: 'Open',
+            ImmCtrl: '',
+            RootCause: '',
+            CA: '',
+            VerResult: '',
+            VerBy: '',
+            VerDate: '',
+            SimilarNC: '',
+            RepFinding: ''
+        });
+    }); // <-- TUTUP forEach DENGAN BENAR
+    
+    // Tambah ke local DB
+    DB.summaryNC.push(...ncItems);
+    
+    // Update AuditPlanActual di local DB
+    const planIdx = DB.auditPlan.findIndex(r =>
+        r.PlanAudit === currentPlanRow.PlanAudit && 
+        r.Line === currentPlanRow.Line && 
+        r.Auditor === currentPlanRow.Auditor
+    );
+    
+    const planUpdate = { 
+        ActualAudit: now.toISOString().split('T')[0], 
+        TotalNCs: totalNC, 
+        StatusAudit: 'Done', 
+        Auditee: auditee, 
+        PartNo: partNo, 
+        TotalApplicable: applicable, 
+        TotalNotApplicable: totalNA, 
+        TotalComformity: totalOK, 
+        OverallScore: score 
+    };
+    
+    if (planIdx >= 0) {
+        Object.assign(DB.auditPlan[planIdx], planUpdate);
+    }
 
-  // Upload ke Google Sheets via Apps Script
-  if (APPS_SCRIPT_URL) {
-    showToast(`⏳ Uploading data to Google Sheets...`, 'success');
-    const ncPromises = ncItems.map(nc => postToScript('appendSummary', {
-      'No': nc.No, 'Line': nc.Line, 'Layer': nc.Layer, 'Clause': nc.Clause, 'Period': nc.Period,
-      'Finding Description': nc.FindingDesc, 'NCPicture': nc.NCPicture,
-      'Finding Mode': nc.FindingMode, 'Severity': nc.Severity, 'Auditor': nc.Auditor,
-      'Issue open date': nc.IssueDate, 'Responsible Person': nc.ResPerson,
-      'Target Completion Date': nc.TargetDate, 'Status': nc.Status,
-      'Immediate control or immediate correction': '', 'Root Cause': '', 'Corrective Action': '',
-      'Verification Result of action taken': '', 'Verified by': '', 'Verification date': '',
-      'Any similar nonconformities exist, or could potentially occur': '', 'Repetitive Finding': ''
-    }));
-    const planPromise = postToScript('updatePlanRow', {
-      'PlanAudit': currentPlanRow.PlanAudit, 'Line': currentPlanRow.Line, 'Auditor': currentPlanRow.Auditor,
-      'ActualAudit': planUpdate.ActualAudit, 'TotalNCs': totalNC, 'StatusAudit': 'Done',
-      'Auditee': auditee, 'PartNo': partNo, 'TotalApplicable': applicable,
-      'TotalNotApplicable': totalNA, 'TotalComformity': totalOK, 'OverallScore': score
-    });
-    Promise.all([...ncPromises, planPromise]).then(results => {
-      const allOk = results.every(r => r.status === 'ok');
-      showToast(allOk ? 'OK: ' + ncItems.length + ' NC & data plan succesfully upload to Google Sheets!' : 'Some data fail to upload. Check console for details.', allOk ? 'success' : 'error');
-    });
-  } else {
-    showToast(`${ncItems.length} NC save in lokal only. Please link the Apps Script to sync to Google Sheets.`, 'success');
-  }
-  
-  // Reset form
-  document.getElementById('fDate').value = '';
-  document.getElementById('fAuditee').value = '';
-  document.getElementById('fPartNo').value = '';
-  document.getElementById('questionsWrap').innerHTML = '';
-  document.getElementById('scoreFooter').style.display = 'none';
-  document.getElementById('fLine').textContent = '—';
-  currentPlanRow = null;
+    buildCharts();
+    renderFollowup();
+
+    // Upload ke Google Sheets via Apps Script
+    if (APPS_SCRIPT_URL) {
+        showToast(`⏳ Uploading data to Google Sheets...`, 'success');
+        
+        const ncPromises = ncItems.map(nc => postToScript('appendSummary', {
+            'No': nc.No, 
+            'Line': nc.Line, 
+            'Layer': nc.Layer, 
+            'Clause': nc.Clause, 
+            'Period': nc.Period,
+            'Finding Description': nc.FindingDesc, 
+            'NCPicture': nc.NCPicture,
+            'Finding Mode': nc.FindingMode, 
+            'Severity': nc.Severity, 
+            'Auditor': nc.Auditor,
+            'Issue open date': nc.IssueDate, 
+            'Responsible Person': nc.ResPerson,
+            'Target Completion Date': nc.TargetDate, 
+            'Status': nc.Status,
+            'Immediate control or immediate correction': '', 
+            'Root Cause': '', 
+            'Corrective Action': '',
+            'Verification Result of action taken': '', 
+            'Verified by': '', 
+            'Verification date': '',
+            'Any similar nonconformities exist, or could potentially occur': '', 
+            'Repetitive Finding': ''
+        }));
+        
+        const planPromise = postToScript('updatePlanRow', {
+            'PlanAudit': currentPlanRow.PlanAudit, 
+            'Line': currentPlanRow.Line, 
+            'Auditor': currentPlanRow.Auditor,
+            'ActualAudit': planUpdate.ActualAudit, 
+            'TotalNCs': totalNC, 
+            'StatusAudit': 'Done',
+            'Auditee': auditee, 
+            'PartNo': partNo, 
+            'TotalApplicable': applicable,
+            'TotalNotApplicable': totalNA, 
+            'TotalComformity': totalOK, 
+            'OverallScore': score
+        });
+        
+        Promise.all([...ncPromises, planPromise])
+            .then(results => {
+                const allOk = results.every(r => r && r.status === 'ok');
+                showToast(
+                    allOk ? '✅ ' + ncItems.length + ' NC & data plan successfully uploaded to Google Sheets!' : 
+                    '⚠️ Some data failed to upload. Check console.', 
+                    allOk ? 'success' : 'error'
+                );
+            })
+            .catch(error => {
+                console.error('Upload error:', error);
+                showToast('❌ Error uploading data to Google Sheets', 'error');
+            });
+    } else {
+        showToast(`✅ ${ncItems.length} NC saved locally. Link gambar tersimpan di NCPicture.`, 'success');
+    }
+    
+    // Reset form
+    document.getElementById('fDate').value = '';
+    document.getElementById('fAuditee').value = '';
+    document.getElementById('fPartNo').value = '';
+    document.getElementById('questionsWrap').innerHTML = '';
+    document.getElementById('scoreFooter').style.display = 'none';
+    document.getElementById('fLine').textContent = '—';
+    currentPlanRow = null;
 }
 
 // ==================== FOLLOW-UP NC ====================
@@ -1410,114 +1553,142 @@ function populateFilters() {
 }
 
 function renderFollowup() {
-  const auditorFilter = document.getElementById('filterAuditor').value;
-  const picFilter = document.getElementById('filterPIC').value;
-  const layerFilter = document.getElementById('filterLayer').value;
-  const statusFilter = document.getElementById('filterStatus').value;
-  
-  let rows = DB.summaryNC.filter(r => {
-    const status = r.Status || '';
-    const auditor = r.Auditor || '';
-    const pic = r.ResPerson || '';
-    const layer = r.Layer || '';
+    const auditorFilter = document.getElementById('filterAuditor').value;
+    const picFilter = document.getElementById('filterPIC').value;
+    const layerFilter = document.getElementById('filterLayer').value;
+    const statusFilter = document.getElementById('filterStatus').value;
     
-    if (statusFilter && status !== statusFilter) return false;
-    if (auditorFilter && auditor !== auditorFilter) return false;
-    if (picFilter && pic !== picFilter) return false;
-    if (layerFilter && layer !== layerFilter) return false;
-    return true;
-  });
-  
-  const container = document.getElementById('followupList');
-  
-  if (rows.length === 0) { 
-    container.innerHTML = '<p style="color:var(--text-light);padding:20px;text-align:center;">🔍 No NC items found with the selected filters.</p>'; 
-    return; 
-  }
-  
-  container.innerHTML = rows.map((r, i) => {
-    const status = r.Status || 'Open';
-    const isClosed = status === 'Closed';
-    const immCtrl = r.ImmCtrl || '';
-    const rootCause = r.RootCause || '';
-    const similar = r.SimilarNC || '';
-    const ca = r.CA || '';
-    const verResult = r.VerResult || '';
-    const today = new Date().toISOString().split('T')[0];
-    return `<div class="nc-card ${isClosed?'status-closed':''}" id="ncc_${i}">
-      <div class="nc-card-grid">
-        <div class="nc-field"><div class="nf-lbl">ID No.</div><div class="nf-val">${r.No||''}</div></div>
-        <div class="nc-field"><div class="nf-lbl">Finding Mode</div><div class="nf-val">${r.FindingMode||''}</div></div>
-        <div class="nc-field"><div class="nf-lbl">Issue Open Date</div><div class="nf-val">${fmtDate(r.IssueDate||'')}</div></div>
-        <div class="nc-field"><div class="nf-lbl">Target Date</div><div class="nf-val">${fmtDate(r.TargetDate||'')}</div></div>
-        <div class="nc-field"><div class="nf-lbl">Line No.</div><div class="nf-val">${r.Line||''}</div></div>
-        <div class="nc-field"><div class="nf-lbl">Clause</div><div class="nf-val">${r.Clause||''}</div></div>
-        <div class="nc-field"><div class="nf-lbl">Auditor</div><div class="nf-val">${r.Auditor||''}</div></div>
-        <div class="nc-field"><div class="nf-lbl">Layer</div><div class="nf-val">${r.Layer||''}</div></div>
-      </div>
-      <div class="nc-field" style="margin-bottom:10px;">
-        <div class="nf-lbl">Finding Description</div>
-        <div class="nf-val" style="background:var(--bg);padding:8px 12px;border-radius:6px;color:var(--danger-light);font-style:italic;">${r.FindingDesc||''}</div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px;">
-        <div class="nc-field"><div class="nf-lbl">Severity</div><div class="nf-val"><span class="badge badge-${(r.Severity||'').toLowerCase()}">${r.Severity||''}</span></div></div>
-        <div class="nc-field"><div class="nf-lbl">Responsible Person</div><div class="nf-val">${r.ResPerson||''}</div></div>
-        <div class="nc-field"><div class="nf-lbl">Verified By</div><div class="nf-val">${currentUser ? currentUser.Title : ''}</div></div>
-      </div>
-      ${!isGuest ? `
-      <div class="nc-edit-row">
-        <div>
-          <div class="nf-lbl" style="margin-bottom:4px;">Immediate Control / Correction</div>
-          <textarea class="nc-textarea ${!immCtrl?'blank':''}" id="nc_imm_${i}" placeholder="Enter immediate control...">${immCtrl}</textarea>
-        </div>
-        <div>
-          <div class="nf-lbl" style="margin-bottom:4px;">Root Cause</div>
-          <textarea class="nc-textarea ${!rootCause?'blank':''}" id="nc_root_${i}" placeholder="Enter root cause...">${rootCause}</textarea>
-        </div>
-        <div>
-          <div class="nf-lbl" style="margin-bottom:4px;">Corrective Action</div>
-          <textarea class="nc-textarea ${!ca?'blank':''}" id="nc_ca_${i}" placeholder="Enter corrective action...">${ca}</textarea>
-        </div>
-        <div>
-          <div>
-            <div class="nf-lbl" style="margin-bottom:4px;">Similar NC Exist?</div>
-            <select class="nc-select ${!similar?'blank':''}" id="nc_sim_${i}">
-              <option value="">— Select —</option>
-              <option ${similar==='Yes'?'selected':''}>Yes</option>
-              <option ${similar==='No'?'selected':''}>No</option>
-            </select>
-          </div>
-          <div style="margin-top:8px;">
-            <div class="nf-lbl" style="margin-bottom:4px;">Verification Result</div>
-            <select class="nc-select ${!verResult?'blank':''}" id="nc_ver_${i}">
-              <option value="">— Select —</option>
-              <option ${verResult==='Pending'?'selected':''}>Pending</option>
-              <option ${verResult==='Accepted'?'selected':''}>Accepted</option>
-              <option ${verResult==='Rejected'?'selected':''}>Rejected</option>
-            </select>
-          </div>
-        </div>
-      </div>
-      <div class="nc-edit-row" style="margin-top:10px;">
-        <div>
-          <div class="nf-lbl" style="margin-bottom:4px;">Verification Date</div>
-          <input type="date" class="nc-select" id="nc_vdate_${i}" value="${r.VerDate ? new Date(r.VerDate).toISOString().split('T')[0] : today}">
-        </div>
-        <div>
-          <div class="nf-lbl" style="margin-bottom:4px;">Final Status</div>
-          <select class="nc-select" id="nc_status_${i}">
-            <option ${status==='Open'?'selected':''}>Open</option>
-            <option ${status==='Closed'?'selected':''}>Closed</option>
-          </select>
-        </div>
-      </div>
-      <div class="nc-actions">
-        <button class="btn-sm btn-primary" onclick="saveNCFollowup(${i},'${r.No}')">&#128190; Save & Upload</button>
-        <button class="btn-sm btn-email" onclick="notifyPIC('${(r.ResPerson||'').replace(/'/g,"\\'")}','${(r.Auditor||'').replace(/'/g,"\\'")}','${(r.IssueDate||'').replace(/'/g,"\\'")}','${(r.FindingDesc||'').substring(0,60).replace(/'/g,"\\'")}','${(r.Line||'')}')">&#9993; Notify PIC</button>
-        <span class="upload-status" id="ncSt_${i}"></span>
-      </div>` : ''}
-    </div>`;
-  }).join('');
+    let rows = DB.summaryNC.filter(r => {
+        const status = r.Status || '';
+        const auditor = r.Auditor || '';
+        const pic = r.ResPerson || '';
+        const layer = r.Layer || '';
+        
+        if (statusFilter && status !== statusFilter) return false;
+        if (auditorFilter && auditor !== auditorFilter) return false;
+        if (picFilter && pic !== picFilter) return false;
+        if (layerFilter && layer !== layerFilter) return false;
+        return true;
+    });
+    
+    const container = document.getElementById('followupList');
+    
+    if (rows.length === 0) { 
+        container.innerHTML = '<p style="color:var(--text-light);padding:20px;text-align:center;">🔍 No NC items found with the selected filters.</p>'; 
+        return; 
+    }
+    
+    container.innerHTML = rows.map((r, i) => {
+        const status = r.Status || 'Open';
+        const isClosed = status === 'Closed';
+        const immCtrl = r.ImmCtrl || '';
+        const rootCause = r.RootCause || '';
+        const similar = r.SimilarNC || '';
+        const ca = r.CA || '';
+        const verResult = r.VerResult || '';
+        const today = new Date().toISOString().split('T')[0];
+        
+        // Cek apakah ada gambar
+        const hasImage = r.NCPicture && r.NCPicture.length > 0;
+        const isGithubUrl = hasImage && r.NCPicture.startsWith('https://raw.githubusercontent.com/');
+        const isBase64 = hasImage && r.NCPicture.startsWith('data:image/');
+        
+        return `<div class="nc-card ${isClosed?'status-closed':''}" id="ncc_${i}">
+            <div class="nc-card-grid">
+                <div class="nc-field"><div class="nf-lbl">ID No.</div><div class="nf-val">${r.No||''}</div></div>
+                <div class="nc-field"><div class="nf-lbl">Finding Mode</div><div class="nf-val">${r.FindingMode||''}</div></div>
+                <div class="nc-field"><div class="nf-lbl">Issue Open Date</div><div class="nf-val">${fmtDate(r.IssueDate||'')}</div></div>
+                <div class="nc-field"><div class="nf-lbl">Target Date</div><div class="nf-val">${fmtDate(r.TargetDate||'')}</div></div>
+                <div class="nc-field"><div class="nf-lbl">Line No.</div><div class="nf-val">${r.Line||''}</div></div>
+                <div class="nc-field"><div class="nf-lbl">Clause</div><div class="nf-val">${r.Clause||''}</div></div>
+                <div class="nc-field"><div class="nf-lbl">Auditor</div><div class="nf-val">${r.Auditor||''}</div></div>
+                <div class="nc-field"><div class="nf-lbl">Layer</div><div class="nf-val">${r.Layer||''}</div></div>
+            </div>
+            <div class="nc-field" style="margin-bottom:10px;">
+                <div class="nf-lbl">Finding Description</div>
+                <div class="nf-val" style="background:var(--bg);padding:8px 12px;border-radius:6px;color:var(--danger-light);font-style:italic;">${r.FindingDesc||''}</div>
+            </div>
+            ${hasImage ? `
+            <div class="nc-field" style="margin-bottom:10px;">
+                <div class="nf-lbl">📷 Evidence Photo</div>
+                <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:6px;">
+                    <div style="position:relative;border:1px solid var(--border);border-radius:8px;padding:4px;background:white;max-width:200px;">
+                        <img src="${r.NCPicture}" alt="NC Evidence" 
+                             style="width:100%;max-height:150px;object-fit:cover;border-radius:4px;cursor:pointer;"
+                             onclick="openImageModal('${r.NCPicture}', '${(r.FindingDesc||'').substring(0,50).replace(/'/g,"\\'")}')">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;font-size:11px;color:var(--text-light);">
+                            <span>${isGithubUrl ? '📎 GitHub' : isBase64 ? '📸 Base64' : '📷 Photo'}</span>
+                            <button onclick="openImageModal('${r.NCPicture}', '${(r.FindingDesc||'').substring(0,50).replace(/'/g,"\\'")}')" 
+                                    style="background:none;border:none;color:var(--primary);cursor:pointer;font-size:12px;">🔍 Zoom</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            ` : `
+            <div class="nc-field" style="margin-bottom:10px;">
+                <div class="nf-lbl" style="color:var(--text-light);">📷 Evidence Photo</div>
+                <div style="padding:8px 12px;background:var(--bg2);border-radius:6px;color:var(--text-light);font-size:13px;font-style:italic;">No photo uploaded</div>
+            </div>
+            `}
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px;">
+                <div class="nc-field"><div class="nf-lbl">Severity</div><div class="nf-val"><span class="badge badge-${(r.Severity||'').toLowerCase()}">${r.Severity||''}</span></div></div>
+                <div class="nc-field"><div class="nf-lbl">Responsible Person</div><div class="nf-val">${r.ResPerson||''}</div></div>
+                <div class="nc-field"><div class="nf-lbl">Verified By</div><div class="nf-val">${currentUser ? currentUser.Title : ''}</div></div>
+            </div>
+            ${!isGuest ? `
+            <div class="nc-edit-row">
+                <div>
+                    <div class="nf-lbl" style="margin-bottom:4px;">Immediate Control / Correction</div>
+                    <textarea class="nc-textarea ${!immCtrl?'blank':''}" id="nc_imm_${i}" placeholder="Enter immediate control...">${immCtrl}</textarea>
+                </div>
+                <div>
+                    <div class="nf-lbl" style="margin-bottom:4px;">Root Cause</div>
+                    <textarea class="nc-textarea ${!rootCause?'blank':''}" id="nc_root_${i}" placeholder="Enter root cause...">${rootCause}</textarea>
+                </div>
+                <div>
+                    <div class="nf-lbl" style="margin-bottom:4px;">Corrective Action</div>
+                    <textarea class="nc-textarea ${!ca?'blank':''}" id="nc_ca_${i}" placeholder="Enter corrective action...">${ca}</textarea>
+                </div>
+                <div>
+                    <div>
+                        <div class="nf-lbl" style="margin-bottom:4px;">Similar NC Exist?</div>
+                        <select class="nc-select ${!similar?'blank':''}" id="nc_sim_${i}">
+                            <option value="">— Select —</option>
+                            <option ${similar==='Yes'?'selected':''}>Yes</option>
+                            <option ${similar==='No'?'selected':''}>No</option>
+                        </select>
+                    </div>
+                    <div style="margin-top:8px;">
+                        <div class="nf-lbl" style="margin-bottom:4px;">Verification Result</div>
+                        <select class="nc-select ${!verResult?'blank':''}" id="nc_ver_${i}">
+                            <option value="">— Select —</option>
+                            <option ${verResult==='Pending'?'selected':''}>Pending</option>
+                            <option ${verResult==='Accepted'?'selected':''}>Accepted</option>
+                            <option ${verResult==='Rejected'?'selected':''}>Rejected</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="nc-edit-row" style="margin-top:10px;">
+                <div>
+                    <div class="nf-lbl" style="margin-bottom:4px;">Verification Date</div>
+                    <input type="date" class="nc-select" id="nc_vdate_${i}" value="${r.VerDate ? new Date(r.VerDate).toISOString().split('T')[0] : today}">
+                </div>
+                <div>
+                    <div class="nf-lbl" style="margin-bottom:4px;">Final Status</div>
+                    <select class="nc-select" id="nc_status_${i}">
+                        <option ${status==='Open'?'selected':''}>Open</option>
+                        <option ${status==='Closed'?'selected':''}>Closed</option>
+                    </select>
+                </div>
+            </div>
+            <div class="nc-actions">
+                <button class="btn-sm btn-primary" onclick="saveNCFollowup(${i},'${r.No}')">&#128190; Save & Upload</button>
+                <button class="btn-sm btn-email" onclick="notifyPIC('${(r.ResPerson||'').replace(/'/g,"\\'")}','${(r.Auditor||'').replace(/'/g,"\\'")}','${(r.IssueDate||'').replace(/'/g,"\\'")}','${(r.FindingDesc||'').substring(0,60).replace(/'/g,"\\'")}','${(r.Line||'')}')">&#9993; Notify PIC</button>
+                <span class="upload-status" id="ncSt_${i}"></span>
+            </div>` : ''}
+        </div>`;
+    }).join('');
 }
 
 function saveNCFollowup(i, no) {
@@ -1771,6 +1942,118 @@ document.querySelectorAll('.modal-overlay').forEach(el => {
   el.addEventListener('click', e => { if (e.target === el) el.classList.remove('active'); });
 });
 
+
+// ==================== KONFIGURASI GITHUB ====================
+const GITHUB_CONFIG = {
+    token: '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', // Ganti dengan token Anda
+    repo: 'yusrinalzi/LPA-AUDIT-APPS', // Format: username/repo (lihat dari screenshot)
+    branch: 'main' // Dari screenshot terlihat branch 'main'
+};  
+// ==================== FUNGSI UPLOAD KE GITHUB ====================
+
+// Fungsi untuk membaca file sebagai base64
+function readFileAsBase64(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+            // Ambil hanya bagian base64 (tanpa prefix data:image/...)
+            const base64 = reader.result.split(',')[1];
+            resolve(base64);
+        };
+        reader.onerror = (error) => {
+            reject(error);
+        };
+        reader.readAsDataURL(file);
+    });
+}
+
+// Fungsi upload ke GitHub
+async function uploadImageToGitHub(file, folder = 'Images') {
+    try {
+        // Baca file sebagai base64
+        const base64Content = await readFileAsBase64(file);
+        
+        // Generate nama file unik
+        const timestamp = Date.now();
+        const cleanName = file.name.replace(/[^a-zA-Z0-9.]/g, '_');
+        const path = `${folder}/${timestamp}_${cleanName}`;
+
+        console.log('Uploading to GitHub:', path);
+
+        // Upload ke GitHub
+        const response = await fetch(`https://api.github.com/repos/${GITHUB_CONFIG.repo}/contents/${path}`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `token ${GITHUB_CONFIG.token}`,
+                'Content-Type': 'application/json',
+                'Accept': 'application/vnd.github.v3+json'
+            },
+            body: JSON.stringify({
+                message: `Upload image: ${file.name}`,
+                content: base64Content,
+                branch: GITHUB_CONFIG.branch
+            })
+        });
+
+        console.log('GitHub Response Status:', response.status);
+
+        if (response.status === 201 || response.status === 200) {
+            const data = await response.json();
+            const rawUrl = `https://raw.githubusercontent.com/${GITHUB_CONFIG.repo}/${GITHUB_CONFIG.branch}/${path}`;
+            console.log('Upload success:', rawUrl);
+            return { success: true, url: rawUrl, path: path };
+        } else {
+            const error = await response.json();
+            console.error('GitHub Error:', error);
+            throw new Error(error.message || 'Upload failed');
+        }
+    } catch (error) {
+        console.error('Error uploading to GitHub:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+  
+// ==================== FUNGSI UPLOAD KE GITHUB ====================
+async function uploadImageToGitHub(file, folder = 'Images') { // Ubah dari 'images' menjadi 'Images'
+    try {
+        // Baca file sebagai base64
+        const base64Content = await readFileAsBase64(file);
+        
+        // Generate nama file unik
+        const timestamp = Date.now();
+        const cleanName = file.name.replace(/[^a-zA-Z0-9.]/g, '_');
+        const path = `${folder}/${timestamp}_${cleanName}`;
+
+        // Upload ke GitHub
+        const response = await fetch(`https://api.github.com/repos/${GITHUB_CONFIG.repo}/contents/${path}`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `token ${GITHUB_CONFIG.token}`,
+                'Content-Type': 'application/json',
+                'Accept': 'application/vnd.github.v3+json'
+            },
+            body: JSON.stringify({
+                message: `Upload image: ${file.name}`,
+                content: base64Content,
+                branch: GITHUB_CONFIG.branch
+            })
+        });
+
+        if (response.status === 201 || response.status === 200) {
+            const data = await response.json();
+            // URL akan menjadi: https://raw.githubusercontent.com/username/repo/branch/Images/nama_file.jpg
+            const rawUrl = `https://raw.githubusercontent.com/${GITHUB_CONFIG.repo}/${GITHUB_CONFIG.branch}/${path}`;
+            return { success: true, url: rawUrl, path: path };
+        } else {
+            const error = await response.json();
+            throw new Error(error.message || 'Upload failed');
+        }
+    } catch (error) {
+        console.error('Error uploading to GitHub:', error);
+        return { success: false, error: error.message };
+    }
+}
   
 </script>
 </body>
