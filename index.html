@@ -1702,8 +1702,8 @@ function renderFollowup() {
                 <div class="nf-val" style="background:var(--bg);padding:8px 12px;border-radius:6px;color:var(--danger-light);font-style:italic;">${r.FindingDesc||''}</div>
             </div>
             
-            <!-- Baris: Severity, Responsible Person, Verified By + GAMBAR di kanan -->
-            <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:10px;">
+            <!-- Baris: Severity, Responsible Person, Verified By -->
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px;">
                 <div class="nc-field">
                     <div class="nf-lbl">Severity</div>
                     <div class="nf-val"><span class="badge badge-${(r.Severity||'').toLowerCase()}">${r.Severity||''}</span></div>
@@ -1716,65 +1716,66 @@ function renderFollowup() {
                     <div class="nf-lbl">Verified By</div>
                     <div class="nf-val">${currentUser ? currentUser.Title : ''}</div>
                 </div>
-                <!-- KOLOM GAMBAR -->
-                <div class="nc-field" style="grid-column:4;grid-row:1/2;">
+            </div>
+            
+            ${!isGuest ? `
+            <!-- Edit Fields - Grid dengan 4 kolom, termasuk gambar -->
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;margin-top:12px;">
+                <!-- Kolom 1: Immediate Control -->
+                <div>
+                    <div class="nf-lbl" style="margin-bottom:4px;">Immediate Control / Correction</div>
+                    <textarea class="nc-textarea ${!immCtrl?'blank':''}" id="nc_imm_${i}" placeholder="Enter immediate control..." rows="3">${immCtrl}</textarea>
+                </div>
+                <!-- Kolom 2: Root Cause -->
+                <div>
+                    <div class="nf-lbl" style="margin-bottom:4px;">Root Cause</div>
+                    <textarea class="nc-textarea ${!rootCause?'blank':''}" id="nc_root_${i}" placeholder="Enter root cause..." rows="3">${rootCause}</textarea>
+                </div>
+                <!-- Kolom 3: Corrective Action -->
+                <div>
+                    <div class="nf-lbl" style="margin-bottom:4px;">Corrective Action</div>
+                    <textarea class="nc-textarea ${!ca?'blank':''}" id="nc_ca_${i}" placeholder="Enter corrective action..." rows="3">${ca}</textarea>
+                </div>
+                <!-- Kolom 4: Gambar (Evidence Photo) -->
+                <div>
                     <div class="nf-lbl">📷 Evidence Photo</div>
                     ${hasImage ? `
-                    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
-                        <div style="position:relative;border:1px solid var(--border);border-radius:8px;padding:4px;background:white;width:100%;max-width:180px;cursor:pointer;" 
-                             onclick="openImageModal('${r.NCPicture}', '${(r.FindingDesc||'').substring(0,50).replace(/'/g,"\\'")}')">
-                            <img src="${r.NCPicture}" alt="NC Evidence" 
-                                 style="width:100%;height:120px;object-fit:cover;border-radius:4px;">
-                            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;font-size:10px;color:var(--text-light);padding:0 4px;">
-                                <span>📎 GitHub</span>
-                                <span style="color:var(--primary);font-weight:600;">🔍 Klik untuk zoom</span>
-                            </div>
+                    <div style="border:1px solid var(--border);border-radius:8px;padding:4px;background:white;cursor:pointer;max-width:100%;" 
+                         onclick="openImageModal('${r.NCPicture}', '${(r.FindingDesc||'').substring(0,50).replace(/'/g,"\\'")}')">
+                        <img src="${r.NCPicture}" alt="NC Evidence" 
+                             style="width:100%;height:100px;object-fit:cover;border-radius:4px;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;font-size:10px;color:var(--text-light);padding:0 4px;">
+                            <span>📎 GitHub</span>
+                            <span style="color:var(--primary);font-weight:600;">🔍 Klik untuk zoom</span>
                         </div>
                     </div>
                     ` : `
-                    <div style="padding:8px 12px;background:var(--bg2);border-radius:6px;color:var(--text-light);font-size:12px;font-style:italic;text-align:right;">
+                    <div style="padding:20px 12px;background:var(--bg2);border-radius:6px;color:var(--text-light);font-size:12px;font-style:italic;text-align:center;border:1px dashed var(--border);">
                         No photo uploaded
                     </div>
                     `}
                 </div>
             </div>
             
-            ${!isGuest ? `
-            <!-- Edit Fields -->
-            <div class="nc-edit-row">
+            <!-- Baris Kedua: Similar NC, Verification Result, Final Status -->
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;margin-top:12px;">
                 <div>
-                    <div class="nf-lbl" style="margin-bottom:4px;">Immediate Control / Correction</div>
-                    <textarea class="nc-textarea ${!immCtrl?'blank':''}" id="nc_imm_${i}" placeholder="Enter immediate control...">${immCtrl}</textarea>
+                    <div class="nf-lbl" style="margin-bottom:4px;">Similar NC Exist?</div>
+                    <select class="nc-select ${!similar?'blank':''}" id="nc_sim_${i}">
+                        <option value="">— Select —</option>
+                        <option ${similar==='Yes'?'selected':''}>Yes</option>
+                        <option ${similar==='No'?'selected':''}>No</option>
+                    </select>
                 </div>
                 <div>
-                    <div class="nf-lbl" style="margin-bottom:4px;">Root Cause</div>
-                    <textarea class="nc-textarea ${!rootCause?'blank':''}" id="nc_root_${i}" placeholder="Enter root cause...">${rootCause}</textarea>
+                    <div class="nf-lbl" style="margin-bottom:4px;">Verification Result</div>
+                    <select class="nc-select ${!verResult?'blank':''}" id="nc_ver_${i}">
+                        <option value="">— Select —</option>
+                        <option ${verResult==='Pending'?'selected':''}>Pending</option>
+                        <option ${verResult==='Accepted'?'selected':''}>Accepted</option>
+                        <option ${verResult==='Rejected'?'selected':''}>Rejected</option>
+                    </select>
                 </div>
-                <div>
-                    <div class="nf-lbl" style="margin-bottom:4px;">Corrective Action</div>
-                    <textarea class="nc-textarea ${!ca?'blank':''}" id="nc_ca_${i}" placeholder="Enter corrective action...">${ca}</textarea>
-                </div>
-                <div>
-                    <div>
-                        <div class="nf-lbl" style="margin-bottom:4px;">Similar NC Exist?</div>
-                        <select class="nc-select ${!similar?'blank':''}" id="nc_sim_${i}">
-                            <option value="">— Select —</option>
-                            <option ${similar==='Yes'?'selected':''}>Yes</option>
-                            <option ${similar==='No'?'selected':''}>No</option>
-                        </select>
-                    </div>
-                    <div style="margin-top:8px;">
-                        <div class="nf-lbl" style="margin-bottom:4px;">Verification Result</div>
-                        <select class="nc-select ${!verResult?'blank':''}" id="nc_ver_${i}">
-                            <option value="">— Select —</option>
-                            <option ${verResult==='Pending'?'selected':''}>Pending</option>
-                            <option ${verResult==='Accepted'?'selected':''}>Accepted</option>
-                            <option ${verResult==='Rejected'?'selected':''}>Rejected</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-            <div class="nc-edit-row" style="margin-top:10px;">
                 <div>
                     <div class="nf-lbl" style="margin-bottom:4px;">Verification Date</div>
                     <input type="date" class="nc-select" id="nc_vdate_${i}" value="${r.VerDate ? new Date(r.VerDate).toISOString().split('T')[0] : today}">
@@ -1787,6 +1788,8 @@ function renderFollowup() {
                     </select>
                 </div>
             </div>
+            
+            <!-- Tombol Aksi -->
             <div class="nc-actions">
                 <button class="btn-sm btn-primary" onclick="saveNCFollowup(${i},'${r.No}')">&#128190; Save & Upload</button>
                 <button class="btn-sm btn-email" onclick="notifyPIC('${(r.ResPerson||'').replace(/'/g,"\\'")}','${(r.Auditor||'').replace(/'/g,"\\'")}','${(r.IssueDate||'').replace(/'/g,"\\'")}','${(r.FindingDesc||'').substring(0,60).replace(/'/g,"\\'")}','${(r.Line||'')}')">&#9993; Notify PIC</button>
@@ -1795,7 +1798,7 @@ function renderFollowup() {
         </div>`;
     }).join('');
 }
-
+  
 function saveNCFollowup(i, no) {
   const el = document.getElementById(`ncSt_${i}`);
   const ncRow = DB.summaryNC.find(r => String(r.No) === String(no));
