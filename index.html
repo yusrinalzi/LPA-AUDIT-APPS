@@ -1113,76 +1113,27 @@ function showPlanDetail(period, planData) {
 }
 
 function renderPlanDetail() {
-  let html = `<div style="overflow-x:auto;"><table class="detail-table"><thead><tr><th>Auditor</th><th>Line</th><th>Layer</th><th>Plan Date</th><th>Actual Date</th><th>Total NC</th><th>Status</th><th>Save</th></tr></thead><tbody>`;
+  let html = `<div style="overflow-x:auto;"><table class="detail-table"><thead><tr><th>Auditor</th><th>Line</th><th>Layer</th><th>Plan Date</th><th>Actual Date</th><th>Total NC</th><th>Status</th></tr></thead><tbody>`;
   editingPlanRows.forEach((r, i) => {
     const status = r.StatusAudit || 'Open';
+    // Tentukan warna berdasarkan status
+    const statusColor = status === 'Done' ? '#27ae60' : '#e74c3c';
+    const statusBg = status === 'Done' ? '#e8f5e9' : '#fdecea';
+    
     html += `<tr>
       <td>${r.Auditor||''}</td>
       <td>${r.Line||''}</td>
       <td>${r.Layer||''}</td>
       <td>${fmtDate(r.PlanAudit)}</td>
-      <td><input type="date" id="pd_actual_${i}" value="${toDateInput(r.ActualAudit)}"></td>
-      <td><input type="number" id="pd_ncs_${i}" value="${r.TotalNCs||0}" min="0" style="width:60px;"></td>
-      <td><select id="pd_status_${i}">
-        <option ${status==='Open'?'selected':''}>Open</option>
-        <option ${status==='Done'?'selected':''}>Done</option>
-      </select></td>
-      <td>
-        <button class="btn-sm btn-primary" onclick="savePlanDetailRow(${i})">&#128190;</button>
-        <div class="upload-status" id="pd_st_${i}" style="font-size:11px;"></div>
-      </td>
+      <td>${r.ActualAudit ? fmtDate(r.ActualAudit) : '-'}</td>
+      <td>${r.TotalNCs || 0}</td>
+      <td><span style="display:inline-block;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600;background:${statusBg};color:${statusColor};">${status}</span></td>
     </tr>`;
   });
   html += '</tbody></table></div>';
   document.getElementById('detailContent').innerHTML = html;
 }
 
-function savePlanDetailRow(i) {
-  const r = editingPlanRows[i];
-  r.ActualAudit = document.getElementById(`pd_actual_${i}`).value;
-  r.TotalNCs = document.getElementById(`pd_ncs_${i}`).value;
-  r.StatusAudit = document.getElementById(`pd_status_${i}`).value;
-  const el = document.getElementById(`pd_st_${i}`);
-  if (APPS_SCRIPT_URL) {
-    el.textContent = '⏳...';
-    postToScript('updatePlanRow', {
-      'PlanAudit': r.PlanAudit, 'Line': r.Line, 'Auditor': r.Auditor,
-      'ActualAudit': r.ActualAudit, 'TotalNCs': r.TotalNCs, 'StatusAudit': r.StatusAudit
-    }).then(res => {
-      el.className = 'upload-status ' + (res.status==='ok'?'ok':'err');
-      el.textContent = res.status==='ok' ? '✅ Saved' : '❌ Gagal';
-      buildCharts();
-    });
-  } else {
-    el.className = 'upload-status ok'; el.textContent = '✓ Lokal';
-    buildCharts();
-  }
-}
-
-function renderPlanModal() {
-  let html = `<table class="data-table"><thead><tr><th>#</th><th>Auditor</th><th>Line</th><th>Layer</th><th>Plan Date</th><th>Actual Date</th><th>Total NC</th><th>Status</th><th>Save</th></tr></thead><tbody>`;
-  editingPlanRows.forEach((r, i) => {
-    const status = r.StatusAudit || 'Open';
-    const badgeCls = status === 'Done' ? 'badge-done' : 'badge-open';
-    html += `<tr>
-      <td>${r.Title||''}</td>
-      <td>${r.Auditor||''}</td>
-      <td>${r.Line||''}</td>
-      <td>${r.Layer||''}</td>
-      <td>${fmtDate(r.PlanAudit)}</td>
-      <td><input type="date" id="planActual_${i}" value="${toDateInput(r.ActualAudit)}" style="border:1px solid #ccc;border-radius:4px;padding:4px;font-size:12px;"></td>
-      <td><input type="number" id="planNCs_${i}" value="${r.TotalNCs||0}" min="0" style="width:60px;border:1px solid #ccc;border-radius:4px;padding:4px;font-size:12px;"></td>
-      <td><select id="planStatus_${i}" style="border:1px solid #ccc;border-radius:4px;padding:4px;font-size:12px;">
-        <option ${status==='Open'?'selected':''}>Open</option>
-        <option ${status==='Done'?'selected':''}>Done</option>
-      </select></td>
-      <td><button class="btn-sm btn-primary" onclick="saveSinglePlanRow(${i})">&#128190;</button>
-      <div class="upload-status" id="planSt_${i}"></div></td>
-    </tr>`;
-  });
-  html += '</tbody></table>';
-  document.getElementById('modalPlanBody').innerHTML = html;
-}
 
 function fmtDate(val) {
   if (!val) return '';
@@ -1198,17 +1149,6 @@ function toDateInput(val) {
   if (isNaN(d)) return '';
   return d.toISOString().split('T')[0];
 }
-
-function saveSinglePlanRow(i) {
-  const el = document.getElementById(`planSt_${i}`);
-  el.className = 'upload-status ok';
-  el.textContent = '✓ Saved locally';
-  editingPlanRows[i].ActualAudit = document.getElementById(`planActual_${i}`).value;
-  editingPlanRows[i].TotalNCs = document.getElementById(`planNCs_${i}`).value;
-  editingPlanRows[i].StatusAudit = document.getElementById(`planStatus_${i}`).value;
-  showToast('Row saved. Note: Google Sheets write requires Apps Script backend.', 'success');
-}
-
 
 
 function closeModal(id) { document.getElementById(id).classList.remove('active'); }
