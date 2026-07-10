@@ -1113,7 +1113,7 @@ function showPlanDetail(period, planData) {
 }
 
 function renderPlanDetail() {
-  let html = `<div style="overflow-x:auto;"><table class="detail-table"><thead><tr><th>Auditor</th><th>Line</th><th>Layer</th><th>Plan Date</th><th>Actual Date</th><th>Total NC</th><th>Status</th></tr></thead><tbody>`;
+  let html = `<div style="overflow-x:auto;"><table class="detail-table"><thead><tr><th>Auditor</th><th>Line</th><th>Layer</th><th>Plan Date</th><th>Actual Date</th><th>Total NC</th><th>Status</th><th>FollowUp</th></tr></thead><tbody>`;
   editingPlanRows.forEach((r, i) => {
     const status = r.StatusAudit || 'Open';
     // Tentukan warna berdasarkan status
@@ -1128,6 +1128,10 @@ function renderPlanDetail() {
       <td>${r.ActualAudit ? fmtDate(r.ActualAudit) : '-'}</td>
       <td>${r.TotalNCs || 0}</td>
       <td><span style="display:inline-block;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600;background:${statusBg};color:${statusColor};">${status}</span></td>
+      <td><button class="btn btn-sm btn-email" onclick="notifyauditteam(editingPlanRows[${i}])" 
+  style="display:${(r.StatusAudit||'').toLowerCase()==='done' ? 'none' : 'inline-block'}">
+  ✉️ Remind Auditor
+</button></td>
     </tr>`;
   });
   html += '</tbody></table></div>';
@@ -1785,6 +1789,36 @@ function resetFollowupFilters() {
   document.getElementById('filterLayer').value = '';
   document.getElementById('filterStatus').value = '';
   renderFollowup();
+}
+
+function notifyauditteam(row) {
+  const { Auditor, PlanAudit, Line, Layer } = row;
+
+  // Cari data email auditor dari DB
+  const auditorData = DB.auditors.find(a => a.Title === Auditor);
+  const to    = auditorData?.Email || '';
+  const cc    = auditorData
+    ? [auditorData.Email2, auditorData.N1Email, auditorData.qms1, auditorData.qms2]
+        .filter(Boolean).join(',')
+    : '';
+
+  const subject = `[LPA Reminder] Audit belum dilakukan — ${Line} ${fmtDate(PlanAudit)}`;
+  const emailBody =
+    `Hi, ${Auditor || 'Auditor'}.\n\n` +
+    `Reminder: Anda terjadwal melakukan Layer Process Audit (${Layer}) ` +
+    `di Line ${Line} pada tanggal ${fmtDate(PlanAudit)}.\n\n` +
+    `Sampai saat ini audit tersebut belum tercatat sebagai selesai (Status: Open).\n` +
+    `Mohon segera laksanakan audit dan laporkan hasilnya ke tim QMS.\n\n` +
+    `Untuk informasi lebih lanjut, hubungi tim QA/QC (Yusrizal/Emilia).\n\n` +
+    `Regards,\nLPA Teams`;
+
+  if (!to) {
+    alert(`Email auditor "${Auditor}" tidak ditemukan di database. Pastikan email sudah diisi di AuditorNameList.`);
+    return;
+  }
+
+  const mailto = `mailto:${to}?cc=${encodeURIComponent(cc)}&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(emailBody)}`;
+  window.open(mailto);
 }
   
 function notifyPIC(pic, auditor, issueDate, desc, line) {
