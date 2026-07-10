@@ -1798,7 +1798,7 @@ function notifyauditteam(row) {
   const to    = auditorData?.Email || '';
   const cc    = auditorData
     ? [auditorData.Email2, auditorData.N1Email, auditorData.qms1, auditorData.qms2]
-        .filter(Boolean).join(';')
+        .filter(Boolean).join(',')
     : '';
 
   const subject = `[LPA Reminder] Audit belum dilakukan — ${Line} ${fmtDate(PlanAudit)}`;
