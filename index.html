@@ -1114,9 +1114,9 @@ function showPlanDetail(period, planData) {
 
 function renderPlanDetail() {
   let html = `<div style="overflow-x:auto;"><table class="detail-table"><thead><tr><th>Auditor</th><th>Line</th><th>Layer</th><th>Plan Date</th><th>Actual Date</th><th>Total NC</th><th>Status</th><th>FollowUp</th></tr></thead><tbody>`;
+  
   editingPlanRows.forEach((r, i) => {
     const status = r.StatusAudit || 'Open';
-    // Tentukan warna berdasarkan status
     const statusColor = status === 'Done' ? '#27ae60' : '#e74c3c';
     const statusBg = status === 'Done' ? '#e8f5e9' : '#fdecea';
     
@@ -1128,16 +1128,16 @@ function renderPlanDetail() {
       <td>${r.ActualAudit ? fmtDate(r.ActualAudit) : '-'}</td>
       <td>${r.TotalNCs || 0}</td>
       <td><span style="display:inline-block;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600;background:${statusBg};color:${statusColor};">${status}</span></td>
-      <td><button class="btn btn-sm btn-email" onclick="(editingPlanRows[${i}])" 
+      <td><button class="btn btn-sm btn-email" onclick="notifyauditteam(editingPlanRows[${i}])" 
   style="display:${(r.StatusAudit||'').toLowerCase()==='done' ? 'none' : 'inline-block'}">
   ✉️ Remind Auditor
 </button></td>
     </tr>`;
   });
+  
   html += '</tbody></table></div>';
   document.getElementById('detailContent').innerHTML = html;
 }
-
 
 function fmtDate(val) {
   if (!val) return '';
@@ -1790,6 +1790,7 @@ function resetFollowupFilters() {
   document.getElementById('filterStatus').value = '';
   renderFollowup();
 }
+
 function notifyauditteam(row) {
   const { Auditor, PlanAudit, Line, Layer } = row;
 
@@ -1818,17 +1819,18 @@ function notifyauditteam(row) {
 
   const mailto = `mailto:${to}?cc=${encodeURIComponent(cc)}&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(emailBody)}`;
   window.open(mailto);
-}
-  
+}  
+
 function notifyPIC(pic, auditor, issueDate, desc, line) {
   const picData = DB.auditors.find(a => a.Title === pic);
   const emailBody = `Hi, ${pic}.\n\nAn NC from Layer Process Audit has been issued by ${auditor} on ${issueDate}. The details of NC is: ${desc}, captured at ${line}.\n\nYou or your subordinate are assigned to close the NC. Please contact QA/QC team for more detail of the NC.\n\nThank you for your action(s).\n\nRegards,\nLPA Teams`;
   const to = picData ? picData.Email : '';
-  const cc = picData ? [picData.Email2, picData['N+1Email'], picData.qms1, picData.qms2].filter(Boolean).join(';') : '';
+  const cc = picData ? [picData.Email2, picData['N+1Email'], picData.qms1, picData.qms2].filter(Boolean).join(',') : '';
   const subject = `[LPA NC Notification] NC from Line ${line} — Action Required`;
   const mailto = `mailto:${to}?cc=${encodeURIComponent(cc)}&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(emailBody)}`;
   window.open(mailto);
-}
+}  
+  
 
 // ==================== TOAST ====================
 function showToast(msg, type='success') {
