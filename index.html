@@ -1825,7 +1825,7 @@ function notifyPIC(pic, auditor, issueDate, desc, line) {
   const picData = DB.auditors.find(a => a.Title === pic);
   const emailBody = `Hi, ${pic}.\n\nAn NC from Layer Process Audit has been issued by ${auditor} on ${issueDate}. The details of NC is: ${desc}, captured at ${line}.\n\nYou or your subordinate are assigned to close the NC. Please contact QA/QC team for more detail of the NC.\n\nThank you for your action(s).\n\nRegards,\nLPA Teams`;
   const to = picData ? picData.Email : '';
-  const cc = picData ? [picData.Email2, picData['N+1Email'], picData.qms1, picData.qms2].filter(Boolean).join('; ') : '';
+  const cc = picData ? [picData.Email2, picData['N+1Email'], picData.qms1, picData.qms2].filter(Boolean).join(';') : '';
   const subject = `[LPA NC Notification] NC from Line ${line} — Action Required`;
   const mailto = `mailto:${to}?cc=${encodeURIComponent(cc)}&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(emailBody)}`;
   window.open(mailto);
