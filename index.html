@@ -1736,7 +1736,7 @@ function renderFollowup() {
             <!-- Tombol Aksi -->
             <div class="nc-actions">
                 <button class="btn-sm btn-primary" onclick="saveNCFollowup(${i},'${r.No}')">&#128190; Save & Upload</button>
-                <button class="btn-sm btn-email" onclick="notifyPIC('${(r.ResPerson||'').replace(/'/g,"\\'")}','${(r.Auditor||'').replace(/'/g,"\\'")}','${(r.IssueDate||'').replace(/'/g,"\\'")}','${(r.FindingDesc||'').substring(0,60).replace(/'/g,"\\'")}','${(r.Line||'')}')">&#9993; Notify PIC</button>
+                <button class="btn-sm btn-email" onclick="notifyPIC('${r.ResPerson}','${r.Auditor}','${r.IssueDate}','${r.FindingDesc?.substring(0,60).replace(/'/g,"\\'")}','${r.Line}','${(r.NCPicture||'').replace(/'/g,"\\'")}')">&#9993; Notify PIC</button>
                 <span class="upload-status" id="ncSt_${i}"></span>
             </div>` : ''}
         </div>`;
@@ -1821,12 +1821,56 @@ function notifyauditteam(row) {
   window.open(mailto);
 }  
 
-function notifyPIC(pic, auditor, issueDate, desc, line) {
+function notifyPIC(pic, auditor, issueDate, desc, line, ncPictureURL) {
+  // Cari data email PIC
   const picData = DB.auditors.find(a => a.Title === pic);
-  const emailBody = `Hi, ${pic}.\n\nAn NC from Layer Process Audit has been issued by ${auditor} on ${issueDate}. The details of NC is: ${desc}, captured at ${line}.\n\nYou or your subordinate are assigned to close the NC. Please contact QA/QC team for more detail of the NC.\n\nThank you for your action(s).\n\nRegards,\nLPA Teams`;
-  const to = picData ? picData.Email : '';
-  const cc = picData ? [picData.Email2, picData['N+1Email'], picData.qms1, picData.qms2].filter(Boolean).join(';') : '';
-  const subject = `[LPA NC Notification] NC from Line ${line} — Action Required`;
+
+  // Cari email auditor dari DB (tidak perlu kirim dari tombol)
+  const auditorData = DB.auditors.find(a => a.Title === auditor);
+  const auditorEmail = auditorData?.Email || '';
+
+  // Susun gambar — kalau ada URL tampilkan, kalau tidak skip
+  const pictureNote = ncPictureURL
+    ? `- NC Picture   : ${ncPictureURL}`
+    : `- NC Picture   : (no photo attached)`;
+
+  const emailBody =
+`Hi, ${pic}.
+
+An NC from Layer Process Audit has been issued. Details are as follows:
+
+- Auditor       : ${auditor}
+- NC Description: ${desc}
+- Location      : ${line}
+- Date/Time     : ${issueDate}
+${pictureNote}
+
+You or your subordinate are assigned to take corrective actions and close the NC via LPA portal:
+https://yusrinalzi.github.io/LPA-AUDIT-APPS/
+
+Please contact QA/QC team for more detail (Yusrizal).
+
+Thank you for your action(s).
+
+Regards,
+LPA Teams`;
+
+  const to = picData?.Email || '';
+  const cc = [
+    picData?.Email2,
+    picData?.['N+1Email'],
+    picData?.qms1,
+    picData?.qms2,
+    auditorEmail,           // ✅ auditor di-CC otomatis
+  ].filter(Boolean).join(';');
+
+  const subject = `[LPA NC] NC from Line ${line} — Action Required: ${desc.substring(0, 50)}`;
+
+  if (!to) {
+    alert(`Email untuk "${pic}" tidak ditemukan di database auditor. Pastikan kolom Email sudah diisi di AuditorNameList.`);
+    return;
+  }
+
   const mailto = `mailto:${to}?cc=${encodeURIComponent(cc)}&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(emailBody)}`;
   window.open(mailto);
 }  
